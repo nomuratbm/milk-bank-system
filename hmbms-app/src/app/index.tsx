@@ -16,7 +16,7 @@ export default function Index() {
 
   // No session — send to landing page to pick a role
   if (!session) {
-    return <Redirect href="/landing" />;
+    return <Redirect href="/welcome" />;
   }
 
   // Signed in as staff — go straight to staff home

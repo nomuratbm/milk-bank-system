@@ -7,22 +7,20 @@ import {
     SafeAreaView,
     StatusBar,
     Dimensions,
-    ScrollView,
-    Image,
 } from 'react-native';
 import Svg, { Path, G, ClipPath, Defs } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
-const LandingScreen: React.FC = () => {
+const welcome: React.FC = () => {
     const router = useRouter();
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-            {/* Top Section - Proportionate to screen height */}
+            {/* Top Section - Scaled to match the role selection screen perfectly */}
             <View style={styles.topSection}>
                 <View style={styles.logoContainer}>
                     {/* High-Fidelity SVG "Mother and Child" Icon */}
@@ -59,7 +57,7 @@ const LandingScreen: React.FC = () => {
                     </Svg>
                 </View>
 
-                {/* Wave Divider */}
+                {/* Enhanced Wave Divider */}
                 <View style={styles.waveContainer}>
                     <Svg
                         height="100"
@@ -76,46 +74,25 @@ const LandingScreen: React.FC = () => {
                 </View>
             </View>
 
-            {/* Bottom Content Section */}
-            <ScrollView style={styles.bottomSection} contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headlineText}>
-                    {"Select your role to continue"}
-                </Text>
+            {/* Bottom Section - Brand Navy with Content */}
+            <View style={styles.bottomSection}>
+                <View style={styles.contentContainer}>
+                    <Text style={styles.welcomeText}>Welcome to Makati Milk Bank</Text>
 
-                {/* Staff Selection Card */}
-                <TouchableOpacity
-                    style={styles.card}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(auth)/loginStaff')}
-                >
-                    <Image
-                        source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/4ype0svv_expires_30_days.png" }}
-                        resizeMode={"stretch"}
-                        style={styles.cardImage}
-                    />
-                    <View style={styles.cardTextContainer}>
-                        <Text style={styles.cardTitle}>{"Staff"}</Text>
-                        <Text style={styles.cardSubtitle}>{"Organization employees"}</Text>
-                    </View>
-                </TouchableOpacity>
+                    <Text style={styles.descriptionText}>
+                        Connecting donors, staff, and beneficiaries{'\n'}
+                        across Makati's milk bank programs
+                    </Text>
+                </View>
 
-                {/* Beneficiary Selection Card */}
                 <TouchableOpacity
-                    style={styles.card}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(auth)/loginBeneficiary')}
+                    style={styles.button}
+                    activeOpacity={0.8}
+                    onPress={() => router.push('/landing')}
                 >
-                    <Image
-                        source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/08vvo9rh_expires_30_days.png" }}
-                        resizeMode={"stretch"}
-                        style={styles.cardImage}
-                    />
-                    <View style={styles.cardTextContainer}>
-                        <Text style={styles.cardTitle}>{"Beneficiary"}</Text>
-                        <Text style={styles.cardSubtitle}>{"Individuals receiving services"}</Text>
-                    </View>
+                    <Text style={styles.buttonText}>Get Started</Text>
                 </TouchableOpacity>
-            </ScrollView>
+            </View>
         </SafeAreaView>
     );
 };
@@ -126,7 +103,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
     },
     topSection: {
-        height: height * 0.32,
+        height: height * 0.32, // Replaced flex: 1 with explicit 32% screen height proportion
         backgroundColor: '#FFFFFF',
         justifyContent: 'center',
         alignItems: 'center',
@@ -134,7 +111,7 @@ const styles = StyleSheet.create({
     },
     logoContainer: {
         marginTop: 10,
-        marginBottom: 35,
+        marginBottom: 35, // Aligned container padding exactly with the selection screen
         alignItems: 'center',
     },
     waveContainer: {
@@ -146,51 +123,47 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     bottomSection: {
-        flex: 1,
+        flex: 1, // Adjusted container weight layout to dynamic distribution
         backgroundColor: '#0D072F',
+        paddingHorizontal: 40,
+        justifyContent: 'flex-end',
+        paddingBottom: 60,
     },
-    scrollContent: {
-        paddingHorizontal: 33,
-        paddingTop: 15,
-        paddingBottom: 48,
+    contentContainer: {
+        marginBottom: 48,
+        alignItems: 'center',
     },
-    headlineText: {
-        color: "#FFFFFF",
+    welcomeText: {
         fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 30,
-    },
-    card: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#1E1B4B66",
-        borderColor: "#FFFFFF24",
-        borderRadius: 10,
-        borderWidth: 1,
-        paddingVertical: 24,
-        paddingHorizontal: 23,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+        textAlign: 'center',
         marginBottom: 20,
+        letterSpacing: 0.5,
+    },
+    descriptionText: {
+        fontSize: 16,
+        color: '#B3B3B3',
+        textAlign: 'center',
+        lineHeight: 24,
+        fontWeight: '600',
+        width: '90%',
+    },
+    button: {
         width: '100%',
+        height: 52,
+        borderWidth: 1,
+        borderColor: 'rgba(194, 194, 194, 0.7)',
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 20,
     },
-    cardImage: {
-        width: 54,
-        height: 51,
-        marginRight: 17,
-    },
-    cardTextContainer: {
-        flex: 1,
-    },
-    cardTitle: {
-        color: "#FFFFFF",
-        fontSize: 18,
-        fontWeight: "bold",
-        marginBottom: 3,
-    },
-    cardSubtitle: {
-        color: "#B3B3B3",
-        fontSize: 14,
-        fontWeight: "bold",
+    buttonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 
-export default LandingScreen;
+export default welcome;

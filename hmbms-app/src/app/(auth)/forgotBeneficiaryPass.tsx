@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     StyleSheet,
     View,
     Text,
+    TextInput,
     TouchableOpacity,
     SafeAreaView,
     StatusBar,
@@ -15,17 +16,18 @@ import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
-const LandingScreen: React.FC = () => {
+const forgotPasswordPreInputBeneficiary: React.FC = () => {
     const router = useRouter();
+    const [email, setEmail] = useState('');
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-            {/* Top Section - Proportionate to screen height */}
+            {/* Top Branding Section (Matching other screens perfectly) */}
             <View style={styles.topSection}>
                 <View style={styles.logoContainer}>
-                    {/* High-Fidelity SVG "Mother and Child" Icon */}
+                    {/* High-Fidelity SVG "Mother and Child" Graphic */}
                     <Svg width="109" height="160" viewBox="0 0 109 160" fill="none">
                         <G clipPath="url(#clip0)">
                             <Path
@@ -59,7 +61,7 @@ const LandingScreen: React.FC = () => {
                     </Svg>
                 </View>
 
-                {/* Wave Divider */}
+                {/* Smooth Wave Divider */}
                 <View style={styles.waveContainer}>
                     <Svg
                         height="100"
@@ -76,45 +78,53 @@ const LandingScreen: React.FC = () => {
                 </View>
             </View>
 
-            {/* Bottom Content Section */}
+            {/* Dynamic Content Scroll Area */}
             <ScrollView style={styles.bottomSection} contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headlineText}>
-                    {"Select your role to continue"}
-                </Text>
 
-                {/* Staff Selection Card */}
-                <TouchableOpacity
-                    style={styles.card}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(auth)/loginStaff')}
-                >
-                    <Image
-                        source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/4ype0svv_expires_30_days.png" }}
-                        resizeMode={"stretch"}
-                        style={styles.cardImage}
-                    />
-                    <View style={styles.cardTextContainer}>
-                        <Text style={styles.cardTitle}>{"Staff"}</Text>
-                        <Text style={styles.cardSubtitle}>{"Organization employees"}</Text>
-                    </View>
-                </TouchableOpacity>
+                {/* Title and Descriptive Help Text Block */}
+                <View style={styles.textContainer}>
+                    <Text style={styles.forgotPasswordTitle}>{"Forgot Password"}</Text>
+                    <Text style={styles.letUsHelpText}>
+                        {"Let us help you by entering your email below!"}
+                    </Text>
+                </View>
 
-                {/* Beneficiary Selection Card */}
-                <TouchableOpacity
-                    style={styles.card}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(auth)/loginBeneficiary')}
-                >
-                    <Image
-                        source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/08vvo9rh_expires_30_days.png" }}
-                        resizeMode={"stretch"}
-                        style={styles.cardImage}
+                {/* Email Input Field Container */}
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>{"Email Address"}</Text>
+                    <TextInput
+                        placeholder={"Enter your email address"}
+                        placeholderTextColor="#B3B3B380"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        style={styles.textInput}
                     />
-                    <View style={styles.cardTextContainer}>
-                        <Text style={styles.cardTitle}>{"Beneficiary"}</Text>
-                        <Text style={styles.cardSubtitle}>{"Individuals receiving services"}</Text>
-                    </View>
-                </TouchableOpacity>
+                </View>
+
+                {/* Button Action 1: Send Recovery Email */}
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.actionButton}
+                        activeOpacity={0.8}
+                        onPress={() => router.push('/(auth)/completeBeneficiary')}
+                    >
+                        <Text style={styles.actionButtonText}>{"Send Email"}</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Button Action 2: Secondary Return link */}
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        activeOpacity={0.7}
+                        onPress={() => router.push('/(auth)/loginBeneficiary')}
+                    >
+                        <Text style={styles.backButtonText}>{"Back to login"}</Text>
+                    </TouchableOpacity>
+                </View>
+
             </ScrollView>
         </SafeAreaView>
     );
@@ -150,47 +160,80 @@ const styles = StyleSheet.create({
         backgroundColor: '#0D072F',
     },
     scrollContent: {
-        paddingHorizontal: 33,
+        paddingHorizontal: 32,
         paddingTop: 15,
         paddingBottom: 48,
     },
-    headlineText: {
-        color: "#FFFFFF",
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 30,
-    },
-    card: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#1E1B4B66",
-        borderColor: "#FFFFFF24",
-        borderRadius: 10,
-        borderWidth: 1,
-        paddingVertical: 24,
-        paddingHorizontal: 23,
-        marginBottom: 20,
+    textContainer: {
+        marginBottom: 32,
         width: '100%',
     },
-    cardImage: {
-        width: 54,
-        height: 51,
-        marginRight: 17,
-    },
-    cardTextContainer: {
-        flex: 1,
-    },
-    cardTitle: {
+    forgotPasswordTitle: {
         color: "#FFFFFF",
-        fontSize: 18,
-        fontWeight: "bold",
-        marginBottom: 3,
+        fontSize: 32,
+        fontWeight: "700",
+        marginBottom: 12,
     },
-    cardSubtitle: {
-        color: "#B3B3B3",
-        fontSize: 14,
-        fontWeight: "bold",
+    letUsHelpText: {
+        color: "rgba(255, 255, 255, 0.8)",
+        fontSize: 16,
+        lineHeight: 24,
+        fontWeight: "400",
+    },
+    inputGroup: {
+        marginBottom: 32,
+        width: '100%',
+    },
+    inputLabel: {
+        color: "#FFFFFF",
+        fontSize: 16,
+        fontWeight: "700",
+        marginBottom: 8,
+    },
+    textInput: {
+        color: "#1E1E1E",
+        fontSize: 16,
+        backgroundColor: "#FFFFFF",
+        borderColor: "#D9D9D9",
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        width: '100%',
+    },
+    buttonContainer: {
+        width: '100%',
+        alignItems: "center",
+        marginBottom: 16,
+    },
+    actionButton: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 8,
+        paddingVertical: 14,
+        justifyContent: "center",
+        alignItems: "center",
+        width: '100%',
+    },
+    actionButtonText: {
+        color: "#1E1E1E",
+        fontSize: 16,
+        fontWeight: "700",
+    },
+    backButton: {
+        backgroundColor: "transparent",
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: "rgba(195, 195, 195, 0.4)",
+        paddingVertical: 14,
+        justifyContent: "center",
+        alignItems: "center",
+        width: '100%',
+    },
+    backButtonText: {
+        color: "rgba(255, 255, 255, 0.8)",
+        fontSize: 16,
+        fontWeight: "700",
     },
 });
 
-export default LandingScreen;
+export default forgotPasswordPreInputBeneficiary;

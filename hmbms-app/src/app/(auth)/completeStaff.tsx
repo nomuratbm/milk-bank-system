@@ -8,24 +8,21 @@ import {
     StatusBar,
     Dimensions,
     ScrollView,
-    Image,
 } from 'react-native';
-import Svg, { Path, G, ClipPath, Defs } from 'react-native-svg';
+import Svg, { Path, G, ClipPath, Defs, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
-const LandingScreen: React.FC = () => {
+const forgotPasswordSuccessfullySentStaff: React.FC = () => {
     const router = useRouter();
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-            {/* Top Section - Proportionate to screen height */}
             <View style={styles.topSection}>
                 <View style={styles.logoContainer}>
-                    {/* High-Fidelity SVG "Mother and Child" Icon */}
                     <Svg width="109" height="160" viewBox="0 0 109 160" fill="none">
                         <G clipPath="url(#clip0)">
                             <Path
@@ -59,7 +56,6 @@ const LandingScreen: React.FC = () => {
                     </Svg>
                 </View>
 
-                {/* Wave Divider */}
                 <View style={styles.waveContainer}>
                     <Svg
                         height="100"
@@ -76,45 +72,35 @@ const LandingScreen: React.FC = () => {
                 </View>
             </View>
 
-            {/* Bottom Content Section */}
             <ScrollView style={styles.bottomSection} contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headlineText}>
-                    {"Select your role to continue"}
+                <Text style={styles.forgotPasswordTitle}>{"Forgot Password"}</Text>
+
+                <View style={styles.iconContainer}>
+                    <Svg width="140" height="140" viewBox="0 0 140 140" fill="none">
+                        <Circle cx="70" cy="70" r="66" stroke="#FFFFFF" strokeWidth="4" />
+                        <Path
+                            d="M45 72 L62 89 L95 52"
+                            stroke="#FFFFFF"
+                            strokeWidth="5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </Svg>
+                </View>
+
+                <Text style={styles.successStatusText}>
+                    {"A link has been successfully\nsent to your email!"}
                 </Text>
 
-                {/* Staff Selection Card */}
-                <TouchableOpacity
-                    style={styles.card}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(auth)/loginStaff')}
-                >
-                    <Image
-                        source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/4ype0svv_expires_30_days.png" }}
-                        resizeMode={"stretch"}
-                        style={styles.cardImage}
-                    />
-                    <View style={styles.cardTextContainer}>
-                        <Text style={styles.cardTitle}>{"Staff"}</Text>
-                        <Text style={styles.cardSubtitle}>{"Organization employees"}</Text>
-                    </View>
-                </TouchableOpacity>
-
-                {/* Beneficiary Selection Card */}
-                <TouchableOpacity
-                    style={styles.card}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(auth)/loginBeneficiary')}
-                >
-                    <Image
-                        source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/08vvo9rh_expires_30_days.png" }}
-                        resizeMode={"stretch"}
-                        style={styles.cardImage}
-                    />
-                    <View style={styles.cardTextContainer}>
-                        <Text style={styles.cardTitle}>{"Beneficiary"}</Text>
-                        <Text style={styles.cardSubtitle}>{"Individuals receiving services"}</Text>
-                    </View>
-                </TouchableOpacity>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        activeOpacity={0.7}
+                        onPress={() => router.push('/(auth)/loginBeneficiary')}
+                    >
+                        <Text style={styles.backButtonText}>{"Back to login"}</Text>
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
         </SafeAreaView>
     );
@@ -150,47 +136,52 @@ const styles = StyleSheet.create({
         backgroundColor: '#0D072F',
     },
     scrollContent: {
-        paddingHorizontal: 33,
+        paddingHorizontal: 32,
         paddingTop: 15,
         paddingBottom: 48,
+        alignItems: 'center',
     },
-    headlineText: {
+    forgotPasswordTitle: {
         color: "#FFFFFF",
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 30,
+        fontSize: 32,
+        fontWeight: "700",
+        alignSelf: 'flex-start',
+        marginBottom: 40,
     },
-    card: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: "#1E1B4B66",
-        borderColor: "#FFFFFF24",
-        borderRadius: 10,
-        borderWidth: 1,
-        paddingVertical: 24,
-        paddingHorizontal: 23,
-        marginBottom: 20,
+    iconContainer: {
+        marginVertical: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    successStatusText: {
+        color: "#FFFFFF",
+        fontSize: 22,
+        lineHeight: 30,
+        fontWeight: "700",
+        textAlign: "center",
+        marginTop: 20,
+        marginBottom: 50,
         width: '100%',
     },
-    cardImage: {
-        width: 54,
-        height: 51,
-        marginRight: 17,
+    buttonContainer: {
+        width: '100%',
+        alignItems: "center",
     },
-    cardTextContainer: {
-        flex: 1,
+    backButton: {
+        backgroundColor: "transparent",
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: "rgba(195, 195, 195, 0.4)",
+        paddingVertical: 14,
+        justifyContent: "center",
+        alignItems: "center",
+        width: '100%',
     },
-    cardTitle: {
-        color: "#FFFFFF",
-        fontSize: 18,
-        fontWeight: "bold",
-        marginBottom: 3,
-    },
-    cardSubtitle: {
-        color: "#B3B3B3",
-        fontSize: 14,
-        fontWeight: "bold",
+    backButtonText: {
+        color: "rgba(255, 255, 255, 0.8)",
+        fontSize: 16,
+        fontWeight: "700",
     },
 });
 
-export default LandingScreen;
+export default forgotPasswordSuccessfullySentStaff;

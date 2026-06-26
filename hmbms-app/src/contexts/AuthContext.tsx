@@ -12,7 +12,7 @@ import type { UserRole, ProgramId, Profile, Beneficiary } from "../types/databas
 interface AuthContextValue {
   session: Session | null;
   role: UserRole | null;
-  programId: ProgramId | null; // null = beneficiary hasn't picked a program yet
+  programId: ProgramId | null;
   loading: boolean;
   signOut: () => Promise<void>;
 }
@@ -26,7 +26,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function loadUserData(userId: string) {
-    // Step 1: get account_type from profiles
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("account_type")
@@ -42,7 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setRole(profile.account_type);
 
-    // Step 2: if beneficiary, also fetch their program_id
     if (profile.account_type === "beneficiary") {
       const { data: beneficiary } = await supabase
         .from("beneficiaries")
@@ -57,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // Check for an existing session on app launch
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -66,7 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Keep everything in sync on sign-in, sign-out, token refresh
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         setSession(newSession);
@@ -88,9 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, role, programId, loading, signOut }}>
+    <AuthContext value={{ session, role, programId, loading, signOut }}>
       {children}
-    </AuthContext.Provider>
+    </AuthContext>
   );
 }
 

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     StyleSheet,
     View,
     Text,
+    TextInput,
     TouchableOpacity,
     SafeAreaView,
     StatusBar,
@@ -15,17 +16,19 @@ import { useRouter } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
-const LandingScreen: React.FC = () => {
+// 1. Declare the component with a capitalized name matching the file concept
+const LoginBeneficiary: React.FC = () => {
     const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-            {/* Top Section - Proportionate to screen height */}
+            {/* Top Section - 32% Dynamic Height */}
             <View style={styles.topSection}>
                 <View style={styles.logoContainer}>
-                    {/* High-Fidelity SVG "Mother and Child" Icon */}
                     <Svg width="109" height="160" viewBox="0 0 109 160" fill="none">
                         <G clipPath="url(#clip0)">
                             <Path
@@ -78,43 +81,73 @@ const LandingScreen: React.FC = () => {
 
             {/* Bottom Content Section */}
             <ScrollView style={styles.bottomSection} contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headlineText}>
-                    {"Select your role to continue"}
-                </Text>
 
-                {/* Staff Selection Card */}
-                <TouchableOpacity
-                    style={styles.card}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(auth)/loginStaff')}
-                >
-                    <Image
-                        source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/4ype0svv_expires_30_days.png" }}
-                        resizeMode={"stretch"}
-                        style={styles.cardImage}
-                    />
-                    <View style={styles.cardTextContainer}>
-                        <Text style={styles.cardTitle}>{"Staff"}</Text>
-                        <Text style={styles.cardSubtitle}>{"Organization employees"}</Text>
+                {/* Header row: Login Text + Badge */}
+                <View style={styles.headerRow}>
+                    <Text style={styles.loginTitle}>{"Login"}</Text>
+                    <View style={styles.badgeContainer}>
+                        <Image
+                            source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/2jpqab9q_expires_30_days.png" }}
+                            resizeMode={"stretch"}
+                            style={styles.badgeImage}
+                        />
+                        <Text style={styles.badgeText}>{"Beneficiary Login"}</Text>
                     </View>
+                </View>
+
+                {/* Email input field */}
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>{"Email"}</Text>
+                    <TextInput
+                        placeholder={"Enter your email"}
+                        placeholderTextColor="#B3B3B380"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        style={styles.textInput}
+                    />
+                </View>
+
+                {/* Password input field */}
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>{"Password"}</Text>
+                    <TextInput
+                        placeholder={"Enter your password"}
+                        placeholderTextColor="#B3B3B380"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={true}
+                        style={styles.textInput}
+                    />
+                </View>
+
+                {/* Forgot Password Action */}
+                <TouchableOpacity
+                    style={styles.forgotPasswordContainer}
+                    onPress={() => router.push('/(auth)/forgotBeneficiaryPass')}
+                >
+                    <Text style={styles.forgotPasswordText}>{"Forgot password?"}</Text>
                 </TouchableOpacity>
 
-                {/* Beneficiary Selection Card */}
+                {/* Login Action Button */}
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                        style={styles.loginButton}
+                        onPress={() => router.push('/(onboarding)/select-program')}
+                    >
+                        <Text style={styles.loginButtonText}>{"Login"}</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Sign Up Redirect link */}
                 <TouchableOpacity
-                    style={styles.card}
-                    activeOpacity={0.7}
-                    onPress={() => router.push('/(auth)/loginBeneficiary')}
+                    style={styles.signUpContainer}
+                    onPress={() => router.push('/(auth)/signupBeneficiary')}
                 >
-                    <Image
-                        source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/08vvo9rh_expires_30_days.png" }}
-                        resizeMode={"stretch"}
-                        style={styles.cardImage}
-                    />
-                    <View style={styles.cardTextContainer}>
-                        <Text style={styles.cardTitle}>{"Beneficiary"}</Text>
-                        <Text style={styles.cardSubtitle}>{"Individuals receiving services"}</Text>
-                    </View>
+                    <Text style={styles.signUpText}>{"New here? Sign Up Here"}</Text>
                 </TouchableOpacity>
+
             </ScrollView>
         </SafeAreaView>
     );
@@ -150,47 +183,101 @@ const styles = StyleSheet.create({
         backgroundColor: '#0D072F',
     },
     scrollContent: {
-        paddingHorizontal: 33,
+        paddingHorizontal: 32,
         paddingTop: 15,
         paddingBottom: 48,
     },
-    headlineText: {
-        color: "#FFFFFF",
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 30,
+    headerRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 32,
     },
-    card: {
+    loginTitle: {
+        color: "#FFFFFF",
+        fontSize: 32,
+        fontWeight: "bold",
+    },
+    badgeContainer: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: "#1E1B4B66",
-        borderColor: "#FFFFFF24",
+        backgroundColor: "#10103A",
+        borderColor: "#FFFDFD4F",
         borderRadius: 10,
         borderWidth: 1,
-        paddingVertical: 24,
-        paddingHorizontal: 23,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+    },
+    badgeImage: {
+        borderRadius: 30,
+        width: 16,
+        height: 13,
+        marginRight: 5,
+    },
+    badgeText: {
+        color: "#B3B3B3",
+        fontSize: 10,
+        fontWeight: "bold",
+    },
+    inputGroup: {
         marginBottom: 20,
         width: '100%',
     },
-    cardImage: {
-        width: 54,
-        height: 51,
-        marginRight: 17,
-    },
-    cardTextContainer: {
-        flex: 1,
-    },
-    cardTitle: {
+    inputLabel: {
         color: "#FFFFFF",
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: "bold",
-        marginBottom: 3,
+        marginBottom: 8,
     },
-    cardSubtitle: {
-        color: "#B3B3B3",
-        fontSize: 14,
+    textInput: {
+        color: "#1E1E1E",
+        fontSize: 16,
+        backgroundColor: "#FFFFFF",
+        borderColor: "#D9D9D9",
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        width: '100%',
+    },
+    forgotPasswordContainer: {
+        alignItems: "flex-end",
+        marginBottom: 36,
+        width: '100%',
+    },
+    forgotPasswordText: {
+        color: "#FFFFFF",
+        fontSize: 12,
+    },
+    buttonContainer: {
+        alignItems: "center",
+        marginBottom: 24,
+        width: '100%',
+    },
+    loginButton: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 8,
+        paddingVertical: 14,
+        justifyContent: "center",
+        alignItems: "center",
+        width: '100%',
+    },
+    loginButtonText: {
+        color: "#1E1E1E",
+        fontSize: 16,
         fontWeight: "bold",
+    },
+    signUpContainer: {
+        alignItems: "center",
+        marginBottom: 20,
+        width: '100%',
+    },
+    signUpText: {
+        color: "#FFFFFF",
+        fontSize: 12,
+        textDecorationLine: 'underline',
     },
 });
 
-export default LandingScreen;
+// 2. Here is your explicit export statement right at the bottom!
+export default LoginBeneficiary;
