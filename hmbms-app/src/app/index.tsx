@@ -26,7 +26,7 @@ export default function Index() {
 
   // Signed in as beneficiary but hasn't picked a program yet
   if (role === "beneficiary" && programId === null) {
-    return <Redirect href="/(onboarding)/select-program" />;
+    return <Redirect href="/(onboarding)/selectProgram" />;
   }
 
   // Signed in as beneficiary with a program — go to beneficiary home

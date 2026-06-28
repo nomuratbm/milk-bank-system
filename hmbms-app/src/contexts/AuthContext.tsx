@@ -26,12 +26,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   async function loadUserData(userId: string) {
-    // Step 1: get account_type from profiles
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("account_type")
       .eq("id", userId)
-      .single() as { data: Pick<Profile, "account_type"> | null; error: Error | null };
+      .maybeSingle() as { data: Pick<Profile, "account_type"> | null; error: Error | null };
 
     if (profileError || !profile) {
       console.warn("Failed to load profile:", profileError?.message);
@@ -42,13 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setRole(profile.account_type);
 
-    // Step 2: if beneficiary, also fetch their program_id
     if (profile.account_type === "beneficiary") {
       const { data: beneficiary } = await supabase
         .from("beneficiaries")
         .select("program_id")
         .eq("id", userId)
-        .single() as { data: Pick<Beneficiary, "program_id"> | null; error: Error | null };
+        .maybeSingle() as { data: Pick<Beneficiary, "program_id"> | null; error: Error | null };
 
       setProgramId((beneficiary?.program_id as ProgramId) ?? null);
     } else {
@@ -57,7 +55,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // Check for an existing session on app launch
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -66,7 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Keep everything in sync on sign-in, sign-out, token refresh
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         setSession(newSession);

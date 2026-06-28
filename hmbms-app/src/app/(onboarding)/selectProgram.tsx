@@ -9,11 +9,12 @@ import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
-import motherBabyIcon from '@/assets/images/Group 13.png';
-import homeBgImage from '@/assets/images/Home Page.png';
-import unionSplashImage from '@/assets/images/Union.png';
-import union1SplashImage from '@/assets/images/Union1.png';
-import union2SplashImage from '@/assets/images/Union2.png';
+// Use require() instead of import for assets with spaces in their filenames
+const motherBabyIcon  = require('../../../assets/images/Group 13.png');
+const homeBgImage     = require('../../../assets/images/Home Page.png');
+const unionSplashImage  = require('../../../assets/images/Union.png');
+const union1SplashImage = require('../../../assets/images/Union1.png');
+const union2SplashImage = require('../../../assets/images/Union2.png');
 
 const PROGRAM_COLORS = {
     supsupTodo: '#FFF280',
@@ -23,7 +24,6 @@ const PROGRAM_COLORS = {
     textDark:   '#1A1A1A',
 };
 
-// Maps button press to program_id in the DB
 const PROGRAM_IDS = {
     supsupTodo: 1,
     milkyWay:   2,
@@ -47,9 +47,9 @@ const SelectProgram: React.FC = () => {
     const milkyWayButtonRef = useRef<TouchableOpacity>(null);
     const momsActButtonRef  = useRef<TouchableOpacity>(null);
 
-    const iconSize           = isLandscape ? Math.min(height * 0.35, 140) : Math.min(width * 0.6, 240);
+    const iconSize            = isLandscape ? Math.min(height * 0.35, 140) : Math.min(width * 0.6, 240);
     const welcomeMarginBottom = isLandscape ? 15 : 40;
-    const buttonWidth        = isLandscape ? '50%' : '80%';
+    const buttonWidth         = isLandscape ? '50%' : '80%';
 
     const saveProgramAndNavigate = async (programId: 1 | 2 | 3) => {
         if (!session?.user) return;
@@ -60,7 +60,6 @@ const SelectProgram: React.FC = () => {
             .eq('id', session.user.id);
 
         if (error) {
-            // Reset animation so user can try again
             splashScale.setValue(0);
             splashRotation.setValue(0);
             setIsAnimating(false);
@@ -161,7 +160,11 @@ const SelectProgram: React.FC = () => {
                     showsVerticalScrollIndicator={false}
                 >
                     <View style={[styles.iconContainer, { marginBottom: isLandscape ? 10 : 20 }]}>
-                        <Image source={motherBabyIcon} style={{ width: iconSize, height: iconSize }} resizeMode="contain" />
+                        <Image
+                            source={motherBabyIcon}
+                            style={{ width: iconSize, height: iconSize }}
+                            resizeMode="contain"
+                        />
                     </View>
 
                     <Text style={[styles.welcomeText, { marginBottom: welcomeMarginBottom }]}>Welcome!</Text>
