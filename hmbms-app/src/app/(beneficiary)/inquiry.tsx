@@ -1,537 +1,326 @@
 import * as React from "react";
-import { ScrollView, Image, StyleSheet, Text, View } from "react-native";
+import {
+    StyleSheet,
+    Text,
+    View,
+    TextInput,
+    TouchableOpacity,
+} from "react-native";
+import Svg, { Path, Rect, G } from "react-native-svg";
 
-const SupsupTodoDashboardEmailInquiry = () => {
+interface InquiryScreenProps {
+    onNavigateToQueue?: () => void;
+}
 
+const SupsupTodoDashboardEmailInquiry: React.FC<InquiryScreenProps> = ({ onNavigateToQueue }) => {
     return (
-        <ScrollView style={styles.supsupTodoDashboardEmail}>
-            <Image style={styles.supsupTodoDashboardEmailChild} resizeMode="cover" />
-            <View style={styles.requestMilkForYourBabyParent}>
-                <Text style={[styles.requestMilkFor, styles.contactUsTypo]}>Request Milk for your Baby</Text>
-                <Text style={[styles.requestMilkFor, styles.contactUsTypo]}>Request Milk for your Baby</Text>
-                <Text style={styles.howItWorks}>HOW IT WORKS</Text>
-                <Text style={styles.getSafeDonor}>Get safe donor milk from the Makati Human Milk Bank.</Text>
-                <View style={[styles.step2Box, styles.step2Layout]}>
-                    <Text style={[styles.getNotified, styles.milkTypo]}>Get notified</Text>
-                    <Text style={[styles.step2, styles.stepTypo]}>STEP 2</Text>
-                    <Text style={[styles.youllBePlaced, styles.tapToPlaceTypo]}>You’ll be placed in a queue and receive an email once milk becomes available.</Text>
-                    <View style={[styles.step2BoxChild, styles.boxBorder]} />
-                    <Image style={[styles.step2BoxItem, styles.boxItemLayout]} resizeMode="cover" />
-                    <Image style={styles.iconBellRing} resizeMode="cover" />
-                </View>
-                <View style={[styles.step3Box, styles.step2Layout]}>
-                    <Text style={[styles.receiveDonorMilk, styles.milkTypo]}>Receive donor milk</Text>
-                    <Text style={[styles.step2, styles.stepTypo]}>STEP 3</Text>
-                    <Text style={[styles.claimYourMilk, styles.tapToPlaceTypo]}>Claim your milk.</Text>
-                    <View style={[styles.step2BoxChild, styles.boxBorder]} />
-                    <Image style={[styles.step2BoxItem, styles.boxItemLayout]} resizeMode="cover" />
-                    <Image style={[styles.hugeiconsbabyBottle, styles.arrowIconPosition]} resizeMode="cover" />
-                </View>
-                <View style={[styles.orderBox, styles.step2Layout]}>
-                    <View style={styles.orderBoxChild} />
-                    <Text style={[styles.orderMilk, styles.orderPosition]}>Order Milk</Text>
-                    <Text style={[styles.readyToProceed, styles.orderPosition]}>READY TO PROCEED?</Text>
-                    <Text style={[styles.tapToPlace, styles.orderPosition]}>Tap to place your request.</Text>
-                    <Image style={[styles.orderBoxItem, styles.boxItemLayout]} resizeMode="cover" />
-                    <Image style={[styles.arrowIcon, styles.arrowIconPosition]} resizeMode="cover" />
-                </View>
-                <View style={[styles.step1Box, styles.step2Layout]}>
-                    <Text style={[styles.submitAnInquiry, styles.milkTypo]}>Submit an inquiry</Text>
-                    <Text style={[styles.step1, styles.stepTypo]}>STEP 1</Text>
-                    <Text style={[styles.fillOutThe, styles.tapToPlaceTypo]}>Fill out the form below to register.</Text>
-                    <View style={[styles.step2BoxChild, styles.boxBorder]} />
-                    <Image style={[styles.step2BoxItem, styles.boxItemLayout]} resizeMode="cover" />
-                    <Image style={[styles.orderIcon, styles.orderPosition]} resizeMode="cover" />
-                </View>
-            </View>
-            <View style={styles.supsupTodoDashboardEmailItem} />
-            <View style={[styles.button, styles.buttonFlexBox]}>
-                <Text style={styles.button2}>Submit</Text>
-            </View>
-            <Text style={[styles.inquiry, styles.nameTypo]}>Inquiry</Text>
-            <View style={[styles.step1Box2, styles.step1Layout]}>
-                <View style={[styles.step1BoxInner, styles.step1Layout]} />
-                <Text style={[styles.enterInquiry, styles.enterTypo]}>Enter Inquiry</Text>
-            </View>
-            <View style={[styles.input, styles.inputLayout]}>
-                <Text style={[styles.enterYourFirst, styles.enterTypo]}>Enter your first name</Text>
-            </View>
-            <Text style={[styles.contactUs, styles.contactUsTypo]}>Contact us!</Text>
-            <Text style={[styles.firstName, styles.nameTypo]}>First Name</Text>
-            <Text style={[styles.lastName, styles.nameTypo]}>Last Name</Text>
-            <View style={[styles.input2, styles.inputLayout]}>
-                <Text style={[styles.enterYourFirst, styles.enterTypo]}>Enter your last name</Text>
-            </View>
-            <Text style={[styles.emailAddress, styles.nameTypo]}>Email Address</Text>
-            <View style={[styles.input3, styles.inputLayout]}>
-                <Text style={[styles.enterYourFirst, styles.enterTypo]}>Enter your last name</Text>
-            </View>
-            <View style={[styles.navbar, styles.navbarLayout]}>
-                <Image style={[styles.subtractIcon, styles.navbarLayout]} resizeMode="cover" />
-                <View style={[styles.homeParent, styles.buttonFlexBox]}>
-                    <Image style={styles.homeIcon} resizeMode="cover" />
-                    <View style={styles.message}>
-                        <View style={styles.messageChild} />
-                        <Image style={[styles.messageItem, styles.iconPosition]} resizeMode="cover" />
+        <View style={styles.backgroundContainer}>
+            <View style={styles.scrollContent}>
+                {/* Intro Headers */}
+                <Text style={styles.mainHeading}>Request Milk for your Baby</Text>
+                <Text style={styles.subHeading}>Get safe donor milk from the Makati Human Milk Bank.</Text>
+
+                <Text style={styles.howItWorksHeading}>HOW IT WORKS</Text>
+
+                {/* STEP 1 BOX */}
+                <View style={styles.stepCard}>
+                    <View style={styles.iconCircleContainer}>
+                        <View style={styles.circleGraphicBackground} />
+                        <View style={styles.iconWrapper}>
+                            <Svg width="43" height="43" fill="none" viewBox="0 0 43 43">
+                                <G stroke="#000000" strokeWidth="2.5">
+                                    <Rect width="25.083" height="30.458" x="8.958" y="7.167" rx="2" />
+                                    <Path
+                                        d="M16.125 16.125h10.75M16.125 23.292h10.75M16.125 30.458h7.167"
+                                        strokeLinecap="round"
+                                    />
+                                </G>
+                            </Svg>
+                        </View>
                     </View>
-                    <Image style={styles.paperIcon} resizeMode="cover" />
-                    <View style={styles.user}>
-                        <Image style={[styles.icon, styles.iconPosition]} resizeMode="cover" />
+                    <View style={styles.cardTextContent}>
+                        <Text style={styles.stepLabel}>STEP 1</Text>
+                        <Text style={styles.stepTitle}>Submit an inquiry</Text>
+                        <Text style={styles.stepDescription}>Fill out the form below to register.</Text>
                     </View>
                 </View>
-                <Image style={[styles.navbarChild, styles.boxItemLayout]} resizeMode="cover" />
+
+                {/* STEP 2 BOX */}
+                <View style={styles.stepCard}>
+                    <View style={styles.iconCircleContainer}>
+                        <View style={styles.circleGraphicBackground} />
+                        <View style={styles.iconWrapper}>
+                            <Svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2B2B2B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
+                            </Svg>
+                        </View>
+                    </View>
+                    <View style={styles.cardTextContent}>
+                        <Text style={styles.stepLabel}>STEP 2</Text>
+                        <Text style={styles.stepTitle}>Get notified</Text>
+                        <Text style={styles.stepDescription}>You’ll be placed in a queue and receive an email once milk becomes available.</Text>
+                    </View>
+                </View>
+
+                {/* STEP 3 BOX */}
+                <View style={styles.stepCard}>
+                    <View style={styles.iconCircleContainer}>
+                        <View style={styles.circleGraphicBackground} />
+                        <View style={styles.iconWrapper}>
+                            <Svg width="36" height="36" fill="none" viewBox="0 0 40 40">
+                                <G
+                                    stroke="#000000"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2.5"
+                                >
+                                    <Path d="M28.333 17.5S30 21.667 30 27.083c0 1.952-.216 3.742-.493 5.233-.348 1.874-.522 2.81-1.449 3.58-.926.77-2.03.77-4.238.77h-7.64c-2.208 0-3.312 0-4.238-.77s-1.1-1.706-1.449-3.58A29 29 0 0 1 10 27.083c0-5.416 1.667-9.583 1.667-9.583" />
+                                    <Path d="M11.665 17.518h16.667c.246-1.36-.131-3.981-3.4-5.018-.775-.246-1.684-.706-2.093-1.48-.362-.686-.531-1.614.011-2.644 1.004-1.905.035-4.242-2.048-4.897A2.8 2.8 0 0 0 20 3.333c-.29-.002-.581.058-.86.145-2.083.656-3.051 2.993-2.047 4.898.542 1.03.373 1.958.01 2.643-.396.75-1.26 1.417-2.064 1.672-2.255.716-3.809 2.422-3.373 4.827M25 23.333h4.167M25 30h4.167" />
+                                </G>
+                            </Svg>
+                        </View>
+                    </View>
+                    <View style={styles.cardTextContent}>
+                        <Text style={styles.stepLabel}>STEP 3</Text>
+                        <Text style={styles.stepTitle}>Receive donor milk</Text>
+                        <Text style={styles.stepDescription}>Claim your milk.</Text>
+                    </View>
+                </View>
+
+                {/* YELLOW READY TO PROCEED CTA BANNER */}
+                <View style={styles.ctaBannerContainer}>
+                    <View style={styles.ctaTextContainer}>
+                        <Text style={styles.ctaLabel}>READY TO PROCEED?</Text>
+                        <Text style={styles.ctaTitle}>Order Milk</Text>
+                        <Text style={styles.ctaDescription}>Tap to place your request.</Text>
+                    </View>
+
+                    {/* Wrapped the arrow circle inside a touch handler targeting your forms function route trigger */}
+                    <TouchableOpacity
+                        style={styles.ctaArrowCircle}
+                        activeOpacity={0.7}
+                        onPress={onNavigateToQueue}
+                    >
+                        <Svg width="40" height="40" fill="none" viewBox="0 0 40 40">
+                            <Path
+                                fill="#0F172A"
+                                d="M2.7.031C1.868-.114 1.03.254.507.994S-.145 2.732.17 3.608L4.327 15.18c.476 1.325 1.622 2.192 2.895 2.192h12.272c1.293 0 2.34 1.176 2.34 2.627s-1.047 2.626-2.34 2.626H7.223c-1.273 0-2.419.868-2.895 2.193L.17 36.392c-.315.876-.186 1.874.337 2.614.524.74 1.361 1.108 2.193.963 13.627-2.376 26.086-8.708 36.415-17.912.56-.499.885-1.256.885-2.057s-.326-1.558-.885-2.057C28.786 8.74 16.327 2.407 2.7.031"
+                            />
+                        </Svg>
+                    </TouchableOpacity>
+                </View>
+
+                {/* FORM HEADER */}
+                <Text style={styles.contactFormTitle}>Contact us!</Text>
+
+                {/* INPUT GROUPS */}
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>First Name</Text>
+                    <TextInput style={styles.textInput} placeholder="Enter your first name" placeholderTextColor="#B3B3B3" />
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Last Name</Text>
+                    <TextInput style={styles.textInput} placeholder="Enter your last name" placeholderTextColor="#B3B3B3" />
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Email Address</Text>
+                    <TextInput style={styles.textInput} placeholder="Enter your email address" placeholderTextColor="#B3B3B3" keyboardType="email-address" />
+                </View>
+
+                <View style={styles.inputGroup}>
+                    <Text style={styles.inputLabel}>Inquiry</Text>
+                    <TextInput
+                        style={[styles.textInput, styles.textAreaInput]}
+                        placeholder="Enter Inquiry"
+                        placeholderTextColor="#B3B3B3"
+                        multiline={true}
+                        numberOfLines={5}
+                        textAlignVertical="top"
+                    />
+                </View>
+
+                {/* SUBMIT BUTTON */}
+                <TouchableOpacity style={styles.submitButton} activeOpacity={0.8}>
+                    <Text style={styles.submitButtonText}>Submit</Text>
+                </TouchableOpacity>
             </View>
-        </ScrollView>);
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-    contactUsTypo: {
-        textAlign: "left",
-        color: "#000",
-        fontFamily: "Inter-SemiBold",
-        fontWeight: "600",
-        fontSize: 24,
-        position: "absolute"
-    },
-    step2Layout: {
-        height: 102,
-        width: 343,
-        position: "absolute"
-    },
-    milkTypo: {
-        fontSize: 14,
-        textAlign: "left",
-        color: "#000",
-        fontFamily: "Inter-SemiBold",
-        fontWeight: "600"
-    },
-    stepTypo: {
-        fontSize: 15,
-        fontFamily: "Inter-Medium",
-        fontWeight: "500",
-        fontStyle: "italic",
-        textAlign: "left",
-        color: "#000"
-    },
-    tapToPlaceTypo: {
-        width: 242,
-        fontSize: 11,
-        fontFamily: "Inter-Light",
-        fontWeight: "300",
-        textAlign: "left",
-        color: "#000"
-    },
-    boxBorder: {
-        borderWidth: 1,
-        borderColor: "#898787",
-        borderRadius: 10,
-        elevation: 4,
-        boxShadow: "0px 1px 4px #000",
-        borderStyle: "solid",
-        left: 0,
-        top: 0
-    },
-    boxItemLayout: {
-        height: 62,
-        position: "absolute"
-    },
-    arrowIconPosition: {
-        height: 40,
-        top: 31,
-        position: "absolute"
-    },
-    orderPosition: {
-        left: 29,
-        position: "absolute"
-    },
-    buttonFlexBox: {
-        justifyContent: "center",
-        alignItems: "center",
-        flexDirection: "row",
-        position: "absolute"
-    },
-    nameTypo: {
-        fontSize: 12,
-        fontFamily: "Inter-Light",
-        fontWeight: "300",
-        textAlign: "left",
-        color: "#000",
-        width: 354,
-        position: "absolute"
-    },
-    step1Layout: {
-        height: 152,
-        width: 334,
-        position: "absolute"
-    },
-    enterTypo: {
-        color: "#b3b3b3",
-        fontFamily: "Inter-Regular",
-        lineHeight: 16,
-        fontSize: 16,
-        textAlign: "left"
-    },
-    inputLayout: {
-        minWidth: 120,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderColor: "#d9d9d9",
-        left: 39.5,
-        width: 334,
-        alignItems: "center",
-        flexDirection: "row",
-        overflow: "hidden",
-        borderWidth: 1,
-        borderRadius: 8,
-        borderStyle: "solid",
-        position: "absolute",
-        backgroundColor: "#fff"
-    },
-    navbarLayout: {
-        width: 432,
-        position: "absolute"
-    },
-    iconPosition: {
-        left: "16.67%",
-        position: "absolute"
-    },
-    supsupTodoDashboardEmail: {
-        width: "100%",
-        maxWidth: "100%",
+    backgroundContainer: {
         flex: 1,
-        backgroundColor: "#fff"
+        backgroundColor: '#FFFFFF',
     },
-    supsupTodoDashboardEmailChild: {
-        top: -140,
-        left: -76,
-        width: 615,
-        height: 476.25,
-        position: "absolute"
+    scrollContent: {
+        paddingHorizontal: 24,
+        paddingTop: 0,
+        marginTop: -8,
+        paddingBottom: 40,
     },
-    requestMilkForYourBabyParent: {
-        top: 128,
-        height: 610,
-        width: 354,
-        left: 33,
-        position: "absolute"
+    mainHeading: {
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#000000',
+        marginBottom: 6,
     },
-    requestMilkFor: {
-        left: 0,
-        top: 0
-    },
-    howItWorks: {
-        top: 84,
-        fontSize: 20,
-        fontFamily: "Inter-Medium",
-        fontWeight: "500",
-        fontStyle: "italic",
-        textAlign: "left",
-        color: "#000",
-        left: 0,
-        position: "absolute"
-    },
-    getSafeDonor: {
-        fontFamily: "Inter-Light",
-        fontWeight: "300",
+    subHeading: {
         fontSize: 16,
-        top: 33,
-        textAlign: "left",
-        color: "#000",
-        left: 0,
-        width: 354,
-        position: "absolute"
+        fontWeight: '300',
+        color: '#333333',
+        marginBottom: 24,
     },
-    step2Box: {
-        top: 256,
-        left: 0
+    howItWorksHeading: {
+        fontSize: 18,
+        fontWeight: '500',
+        fontStyle: 'italic',
+        color: '#000000',
+        marginBottom: 16,
     },
-    getNotified: {
-        top: 37,
-        left: 95,
-        position: "absolute"
-    },
-    step2: {
-        top: 19,
-        left: 95,
-        position: "absolute"
-    },
-    youllBePlaced: {
-        top: 57,
-        left: 95,
-        position: "absolute"
-    },
-    step2BoxChild: {
-        height: 102,
-        width: 343,
-        position: "absolute"
-    },
-    step2BoxItem: {
-        left: 17,
-        width: 67,
-        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-        height: 62,
-        top: 20
-    },
-    iconBellRing: {
-        left: 32,
-        height: 38,
-        width: 38,
-        top: 33,
-        position: "absolute"
-    },
-    step3Box: {
-        top: 382,
-        left: 0
-    },
-    receiveDonorMilk: {
-        top: 38,
-        left: 95,
-        position: "absolute"
-    },
-    claimYourMilk: {
-        top: 58,
-        left: 95,
-        position: "absolute"
-    },
-    hugeiconsbabyBottle: {
-        left: 30,
-        width: 40
-    },
-    orderBox: {
-        top: 508,
-        left: 4
-    },
-    orderBoxChild: {
-        borderColor: "#1e1e1e",
-        backgroundColor: "#ffd230",
+    stepCard: {
+        flexDirection: 'row',
+        backgroundColor: '#FFFFFF',
         borderWidth: 1,
-        borderStyle: "solid",
-        borderRadius: 10,
-        elevation: 4,
-        boxShadow: "0px 1px 4px #000",
-        height: 102,
-        width: 343,
-        left: 0,
-        top: 0,
-        position: "absolute"
+        borderColor: '#E3E3E3',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        alignItems: 'center',
     },
-    orderMilk: {
-        top: 42,
+    iconCircleContainer: {
+        position: 'relative',
+        width: 60,
+        height: 60,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    circleGraphicBackground: {
+        position: 'absolute',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: 'rgba(255, 241, 146, 0.5)',
+    },
+    iconWrapper: {
+        position: 'absolute',
+        zIndex: 5,
+    },
+    cardTextContent: {
+        flex: 1,
+    },
+    stepLabel: {
         fontSize: 14,
-        textAlign: "left",
-        color: "#000",
-        fontFamily: "Inter-SemiBold",
-        fontWeight: "600"
+        fontWeight: '500',
+        fontStyle: 'italic',
+        color: '#666666',
+        marginBottom: 2,
     },
-    readyToProceed: {
-        top: 23,
-        fontSize: 15,
-        fontFamily: "Inter-Medium",
-        fontWeight: "500",
-        fontStyle: "italic",
-        textAlign: "left",
-        color: "#000"
+    stepTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: '#000000',
+        marginBottom: 4,
     },
-    tapToPlace: {
-        top: 62,
-        width: 242,
-        fontSize: 11,
-        fontFamily: "Inter-Light",
-        fontWeight: "300",
-        textAlign: "left",
-        color: "#000"
+    stepDescription: {
+        fontSize: 13,
+        fontWeight: '300',
+        color: '#444444',
+        lineHeight: 17,
     },
-    orderBoxItem: {
-        left: 252,
-        width: 67,
-        boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.25)",
-        height: 62,
-        top: 19
-    },
-    arrowIcon: {
-        width: "11.66%",
-        right: "10.2%",
-        left: "78.13%"
-    },
-    step1Box: {
-        top: 129,
-        left: 0
-    },
-    submitAnInquiry: {
-        top: 41,
-        left: 95,
-        position: "absolute"
-    },
-    step1: {
-        top: 22,
-        left: 95,
-        position: "absolute"
-    },
-    fillOutThe: {
-        top: 61,
-        left: 95,
-        position: "absolute"
-    },
-    orderIcon: {
-        top: 29,
-        width: 43,
-        height: 43
-    },
-    supsupTodoDashboardEmailItem: {
-        top: 776,
-        width: 412,
-        height: 576,
-        left: 0,
-        position: "absolute",
-        backgroundColor: "#fff"
-    },
-    button: {
-        marginLeft: -149,
-        top: 1261,
-        left: "50%",
-        borderColor: "#ffd230",
-        width: 300,
-        height: 42,
-        padding: 11,
-        overflow: "hidden",
+    ctaBannerContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#FFD230',
         borderWidth: 1,
+        borderColor: '#1E1E1E',
+        borderRadius: 12,
+        padding: 18,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 8,
+        marginBottom: 32,
+    },
+    ctaTextContainer: {
+        flex: 1,
+    },
+    ctaLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        fontStyle: 'italic',
+        color: '#000000',
+        marginBottom: 2,
+    },
+    ctaTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: '#000000',
+        marginBottom: 4,
+    },
+    ctaDescription: {
+        fontSize: 13,
+        fontWeight: '300',
+        color: '#000000',
+    },
+    ctaArrowCircle: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#FFFFFF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        paddingLeft: 7,
+        paddingTop: 1,
+    },
+    contactFormTitle: {
+        fontSize: 24,
+        fontWeight: '600',
+        color: '#000000',
+        marginBottom: 16,
+    },
+    inputGroup: {
+        width: '100%',
+        marginBottom: 16,
+    },
+    inputLabel: {
+        fontSize: 13,
+        fontWeight: '300',
+        color: '#000000',
+        marginBottom: 6,
+    },
+    textInput: {
+        width: '100%',
+        height: 46,
+        borderWidth: 1,
+        borderColor: '#D9D9D9',
         borderRadius: 8,
-        justifyContent: "center",
-        alignItems: "center",
-        flexDirection: "row",
-        backgroundColor: "#ffd230",
-        borderStyle: "solid"
+        paddingHorizontal: 16,
+        fontSize: 15,
+        color: '#000000',
+        backgroundColor: '#FFFFFF',
     },
-    button2: {
-        fontWeight: "700",
-        fontFamily: "Inter-Bold",
-        color: "#1e1e1e",
-        textAlign: "center",
-        lineHeight: 16,
-        fontSize: 16
+    textAreaInput: {
+        height: 120,
+        paddingTop: 12,
+        paddingBottom: 12,
     },
-    inquiry: {
-        top: 1216,
-        left: 33,
-        fontSize: 12
+    submitButton: {
+        width: '100%',
+        height: 48,
+        backgroundColor: '#FFD230',
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 16,
     },
-    step1Box2: {
-        top: 1059,
-        left: 40
+    submitButtonText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#1E1E1E',
     },
-    step1BoxInner: {
-        borderWidth: 1,
-        borderColor: "#898787",
-        borderRadius: 10,
-        elevation: 4,
-        boxShadow: "0px 1px 4px #000",
-        borderStyle: "solid",
-        left: 0,
-        top: 0
-    },
-    enterInquiry: {
-        top: 120,
-        left: 15,
-        width: 275,
-        position: "absolute"
-    },
-    input: {
-        top: 828.5
-    },
-    enterYourFirst: {
-        flex: 1
-    },
-    contactUs: {
-        top: 787,
-        left: 21
-    },
-    firstName: {
-        top: 874,
-        left: 33,
-        fontSize: 12
-    },
-    lastName: {
-        top: 952,
-        left: 35
-    },
-    input2: {
-        top: 906.5
-    },
-    emailAddress: {
-        top: 1029,
-        left: 31
-    },
-    input3: {
-        top: 983.5
-    },
-    navbar: {
-        top: 834,
-        left: -7,
-        height: 83,
-        display: "none"
-    },
-    subtractIcon: {
-        height: 63,
-        top: 20,
-        left: 0
-    },
-    homeParent: {
-        top: 30,
-        left: 53,
-        gap: 55
-    },
-    homeIcon: {
-        width: 35,
-        height: 35
-    },
-    message: {
-        opacity: 0,
-        height: 43,
-        width: 40
-    },
-    messageChild: {
-        height: "54.65%",
-        width: "71.75%",
-        top: "22.67%",
-        right: "14.08%",
-        bottom: "22.67%",
-        left: "14.17%",
-        backgroundColor: "#0d072f",
-        borderColor: "#0d072f",
-        borderWidth: 2,
-        borderRadius: 2,
-        borderStyle: "solid",
-        position: "absolute"
-    },
-    messageItem: {
-        height: "16.74%",
-        width: "66.75%",
-        top: "37.5%",
-        right: "16.58%",
-        bottom: "45.76%",
-        borderRadius: 2
-    },
-    paperIcon: {
-        height: 35,
-        width: 38
-    },
-    user: {
-        height: 36,
-        width: 36,
-        overflow: "hidden"
-    },
-    icon: {
-        height: "75%",
-        width: "66.67%",
-        top: "12.5%",
-        right: "16.67%",
-        bottom: "12.5%"
-    },
-    navbarChild: {
-        left: 131,
-        width: 64,
-        top: 0
-    }
 });
 
 export default SupsupTodoDashboardEmailInquiry;
