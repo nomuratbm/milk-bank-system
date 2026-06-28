@@ -17,6 +17,17 @@ export interface Beneficiary {
   registered_at: string;
 }
 
+export interface Donor {
+  id: string;
+  phone: string | null;
+  first_name: string;
+  last_name: string;
+  contact_num: string | null;
+  prescreening_notes: string | null;
+  consent_doc_url: string | null;
+  registered_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
