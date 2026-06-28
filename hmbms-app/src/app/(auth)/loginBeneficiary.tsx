@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { globalStyles, THEME_TOKENS, TopBrandingSection } from './globalStyles';
+import { supabase } from '../../lib/supabase';
 
 const LoginBeneficiary: React.FC = () => {
     const router = useRouter();
@@ -9,6 +10,28 @@ const LoginBeneficiary: React.FC = () => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleLogin = async () => {
+        if (!email.trim() || !password) {
+            Alert.alert("Error", "Please fill in all fields.");
+            return;
+        }
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password,
+            });
+            if (error) {
+                Alert.alert("Login Failed", error.message);
+            }
+        } catch (err: any) {
+            Alert.alert("Error", err.message || "An unexpected error occurred.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <SafeAreaView style={globalStyles.container}>
@@ -37,8 +60,16 @@ const LoginBeneficiary: React.FC = () => {
                 </TouchableOpacity>
 
                 <View style={globalStyles.buttonContainer}>
-                    <TouchableOpacity style={[globalStyles.actionButton, { backgroundColor: theme.accent }]} onPress={() => router.push('/(onboarding)/select-program')}>
-                        <Text style={[globalStyles.actionButtonText, { color: theme.buttonText }]}>{"Login"}</Text>
+                    <TouchableOpacity 
+                        style={[globalStyles.actionButton, { backgroundColor: theme.accent }]} 
+                        onPress={handleLogin}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator size="small" color={theme.buttonText} />
+                        ) : (
+                            <Text style={[globalStyles.actionButtonText, { color: theme.buttonText }]}>{"Login"}</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={globalStyles.redirectContainer} onPress={() => router.push('/signupBeneficiary')}>

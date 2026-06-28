@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, StatusBar, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { globalStyles, THEME_TOKENS, TopBrandingSection } from './globalStyles';
+import { supabase } from '../../lib/supabase';
 
 const SignupBeneficiary: React.FC = () => {
     const router = useRouter();
@@ -12,6 +13,41 @@ const SignupBeneficiary: React.FC = () => {
     const [mobileNumber, setMobileNumber] = useState('');
     const [password, setPassword] = useState('');
     const [isAgreed, setIsAgreed] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleSignup = async () => {
+        if (!fullName.trim() || !email.trim() || !password) {
+            Alert.alert("Error", "Please fill in all fields.");
+            return;
+        }
+        if (!isAgreed) {
+            Alert.alert("Error", "You must agree to the Terms and Conditions.");
+            return;
+        }
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.signUp({
+                email: email.trim(),
+                password: password,
+                options: {
+                    data: {
+                        account_type: "beneficiary",
+                        full_name: fullName.trim(),
+                    }
+                }
+            });
+
+            if (error) {
+                Alert.alert("Signup Failed", error.message);
+            } else {
+                Alert.alert("Success", "Account created! Please check your email inbox to verify your account or complete onboarding.");
+            }
+        } catch (err: any) {
+            Alert.alert("Error", err.message || "An unexpected error occurred.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <SafeAreaView style={globalStyles.container}>
@@ -51,8 +87,16 @@ const SignupBeneficiary: React.FC = () => {
                 </TouchableOpacity>
 
                 <View style={globalStyles.buttonContainer}>
-                    <TouchableOpacity style={[globalStyles.actionButton, { backgroundColor: theme.accent }]} onPress={() => router.push('/(onboarding)/select-program')}>
-                        <Text style={[globalStyles.actionButtonText, { color: theme.buttonText }]}>{"Sign Up"}</Text>
+                    <TouchableOpacity 
+                        style={[globalStyles.actionButton, { backgroundColor: theme.accent }]} 
+                        onPress={handleSignup}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator size="small" color={theme.buttonText} />
+                        ) : (
+                            <Text style={[globalStyles.actionButtonText, { color: theme.buttonText }]}>{"Sign Up"}</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
                 <TouchableOpacity style={globalStyles.redirectContainer} onPress={() => router.push('/loginBeneficiary')}>

@@ -5,6 +5,8 @@ import {
     useWindowDimensions, Animated, Easing
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { supabase } from '../../lib/supabase';
+import { Alert } from 'react-native';
 
 // Make sure to adjust these paths if needed
 import motherBabyIcon from '@/assets/images/Group 13.png';
@@ -106,15 +108,43 @@ const SelectProgram: React.FC = () => {
         }
     };
 
-    const handleSupsupPress = () => {
+    const saveProgramSelection = async (programId: number) => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const fullName = session.user.user_metadata?.full_name || "New Beneficiary";
+                const nameParts = fullName.trim().split(" ");
+                const firstName = nameParts[0] || "New";
+                const lastName = nameParts.slice(1).join(" ") || "Beneficiary";
+
+                const { error } = await supabase.from("beneficiaries").upsert({
+                    id: session.user.id,
+                    program_id: programId,
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: session.user.email,
+                });
+                if (error) {
+                    console.warn("Failed to save program selection:", error.message);
+                }
+            }
+        } catch (err) {
+            console.error("Error in saveProgramSelection:", err);
+        }
+    };
+
+    const handleSupsupPress = async () => {
+        await saveProgramSelection(1);
         triggerSplashAnimation(supsupButtonRef, unionSplashImage, '/(beneficiary)/home');
     };
 
-    const handleMilkyWayPress = () => {
+    const handleMilkyWayPress = async () => {
+        await saveProgramSelection(2);
         triggerSplashAnimation(milkyWayButtonRef, union1SplashImage, '/(beneficiary)/home');
     };
 
-    const handleMomsActPress = () => {
+    const handleMomsActPress = async () => {
+        await saveProgramSelection(3);
         triggerSplashAnimation(momsActButtonRef, union2SplashImage, '/(beneficiary)/home');
     };
 
