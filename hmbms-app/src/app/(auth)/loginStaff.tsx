@@ -37,7 +37,7 @@ const LoginStaff: React.FC = () => {
                 </TouchableOpacity>
 
                 <View style={globalStyles.buttonContainer}>
-                    <TouchableOpacity style={[globalStyles.actionButton, { backgroundColor: theme.accent }]} onPress={() => router.push('/(onboarding)/select-program')}>
+                    <TouchableOpacity style={[globalStyles.actionButton, { backgroundColor: theme.accent }]} onPress={() => router.push('/(staff)/home')}>
                         <Text style={[globalStyles.actionButtonText, { color: theme.buttonText }]}>{"Login"}</Text>
                     </TouchableOpacity>
                 </View>

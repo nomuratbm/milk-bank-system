@@ -17,6 +17,17 @@ export interface Beneficiary {
   registered_at: string;
 }
 
+export interface Donor {
+  id: string;
+  phone: string | null;
+  first_name: string;
+  last_name: string;
+  contact_num: string | null;
+  prescreening_notes: string | null;
+  consent_doc_url: string | null;
+  registered_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -32,6 +43,14 @@ export interface Database {
         Update: Partial<Beneficiary>;
         Relationships: [];
       };
+
+      donors: {
+        Row: Donor;
+        Insert: Partial<Donor> & { id: string };
+        Update: Partial<Donor>;
+        Relationships: [];
+      };
+
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
