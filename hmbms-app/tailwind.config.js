@@ -19,6 +19,18 @@ module.exports = {
           400: "#B3B3B3",
           600: "#666666",
         },
+        supsup: {
+          DEFAULT: "#FFF192",
+          accent:  "#FFD230",
+        },
+        milky: {
+          DEFAULT: "#7FD8D4",
+          accent:  "#27978B",
+        },
+        moms: {
+          DEFAULT: "#F4A7C3",
+          accent:  "#D4608A",
+        },
       },
     },
   },
