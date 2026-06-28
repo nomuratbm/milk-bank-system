@@ -43,7 +43,7 @@ export interface Database {
         Update: Partial<Beneficiary>;
         Relationships: [];
       };
-      donors: {                                          // ← this is missing
+      donors: {
         Row: Donor;
         Insert: Partial<Donor> & { id: string };
         Update: Partial<Donor>;
