@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     StyleSheet,
     View,
@@ -9,8 +9,10 @@ import {
     Dimensions,
     ScrollView,
     ImageBackground,
+    Image,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { supabase } from '@/lib/supabase';
 
 // Import ALL separate file modules safely
 import InquiryScreen from './inquiry';
@@ -23,6 +25,38 @@ type ScreenType = 'home' | 'inquiry' | 'queue' | 'forms' | 'profile';
 
 const HomeScreen: React.FC = () => {
     const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
+    const [shouldScrollToContact, setShouldScrollToContact] = useState(false);
+    const scrollViewRef = useRef<ScrollView>(null);
+
+    const [queuePosition, setQueuePosition] = useState<number | null>(67);
+    const [estimatedWaitDays, setEstimatedWaitDays] = useState<number | null>(0);
+
+    useEffect(() => {
+        if (currentScreen !== 'home') return;
+        const fetchQueueData = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: request } = await (supabase as any)
+                        .from('milk_requests')
+                        .select('queue_position, estimated_wait_days')
+                        .eq('user_id', user.id)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (request) {
+                        setQueuePosition(request.queue_position);
+                        setEstimatedWaitDays(request.estimated_wait_days);
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching home queue data:", err);
+            }
+        };
+
+        fetchQueueData();
+    }, [currentScreen]);
 
     // Dynamic Header Title Layout Component (LOCKED ARCH CODES)
     const renderHeaderTitle = () => {
@@ -88,18 +122,63 @@ const HomeScreen: React.FC = () => {
     const renderScreenContent = () => {
         switch (currentScreen) {
             case 'inquiry':
-                return <InquiryScreen onNavigateToQueue={() => setCurrentScreen('forms')} />;
+                return (
+                    <InquiryScreen
+                        onNavigateToQueue={() => setCurrentScreen('forms')}
+                        scrollToContact={shouldScrollToContact}
+                        onContactScrolled={() => setShouldScrollToContact(false)}
+                        mainScrollViewRef={scrollViewRef}
+                    />
+                );
             case 'queue':
-                return <QueueScreen />;
+                return (
+                    <QueueScreen
+                        onNavigateToInquiry={() => {
+                            setShouldScrollToContact(true);
+                            setCurrentScreen('inquiry');
+                        }}
+                    />
+                );
             case 'forms':
-                return <FormsScreen />;
+                return (
+                    <FormsScreen
+                        onNavigateToInquiry={() => {
+                            setShouldScrollToContact(true);
+                            setCurrentScreen('inquiry');
+                        }}
+                    />
+                );
             case 'profile':
                 return <ProfileScreen />;
             case 'home':
             default:
                 return (
-                    <View style={styles.centerContainer}>
-                        <Text style={styles.screenTitle}>Welcome Home Dashboard</Text>
+                    <View style={styles.homeContainer}>
+                        {/* Quick Update Section */}
+                        <Text style={styles.sectionHeading}>Quick Update!</Text>
+                        <View style={styles.updateCard}>
+                            <Text style={styles.cardTextBold}>
+                                Queue Position:   {queuePosition !== null ? queuePosition : '- -'}
+                            </Text>
+                            <Text style={[styles.cardTextRegular, { marginBottom: 4 }]}>
+                                Your order has been processed.
+                            </Text>
+                            <Text style={styles.cardTextRegular}>
+                                Estimated Wait Time: {estimatedWaitDays !== null ? `${estimatedWaitDays} days.` : '--'}
+                            </Text>
+                        </View>
+
+                        {/* About Us Section */}
+                        <Text style={styles.aboutHeading}>About us!</Text>
+                        <Image
+                            source={require('../../../assets/images/Group 14.png')}
+                            style={styles.aboutLogo}
+                            resizeMode="contain"
+                        />
+                        <Text style={styles.aboutText}>
+                            At Milk Bank System, we believe that every drop counts. Our System is a purpose-built platform designed to streamline the complex, day-to-day operations of human milk banks. Our mission is to bridge the gap between generous donors and the vulnerable infants who need it most, ensuring that life-saving milk is processed, tracked, and delivered with absolute precision and care.{"\n\n"}
+                            Managing a milk bank requires rigorous safety standards and flawless logistics. We created Milk Bank System to centralize those needs into one secure, intuitive system, empowering healthcare professionals to focus on saving lives rather than managing paperwork.
+                        </Text>
                     </View>
                 );
         }
@@ -110,7 +189,7 @@ const HomeScreen: React.FC = () => {
             <StatusBar barStyle="dark-content" backgroundColor="#FFF192" />
 
             {/* Single Scrolling Container Flow */}
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            <ScrollView ref={scrollViewRef} style={styles.content} showsVerticalScrollIndicator={false}>
 
                 {/* Header Container Area */}
                 <View style={styles.headerContainer}>
@@ -127,7 +206,7 @@ const HomeScreen: React.FC = () => {
                     {/* Wavy Mask Guard Layer */}
                     <View style={styles.waveContainer}>
                         <Svg height="105" width="100%" viewBox="0 0 375 105" preserveAspectRatio="none">
-                            <Path d="M0,58 C 93.75 14, 281.25 84, 375 58 L375,105 L0,105 Z" fill="transparent" stroke="#000000" strokeWidth="3.5" />
+                            <Path d="M0,58 C 93.75 14, 281.25 84, 375 58" fill="none" stroke="#000000" strokeWidth="3.5" />
                             <Path d="M0,59 C 93.75 15, 281.25 85, 375 59 L375,105 L0,105 Z" fill="#FFFFFF" />
                         </Svg>
                     </View>
@@ -319,6 +398,67 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 4,
+    },
+    homeContainer: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
+        paddingHorizontal: 24,
+        paddingTop: 8,
+        paddingBottom: 40,
+    },
+    sectionHeading: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#000000',
+        marginTop: 20,
+        marginBottom: 12,
+    },
+    updateCard: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E3E3E3',
+        borderRadius: 12,
+        padding: 18,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    cardTextBold: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#000000',
+        marginBottom: 8,
+    },
+    cardTextRegular: {
+        fontSize: 14,
+        color: '#333333',
+        lineHeight: 18,
+    },
+    aboutHeading: {
+        fontSize: 28,
+        fontWeight: '700',
+        color: '#000000',
+        textAlign: 'center',
+        marginTop: 28,
+        marginBottom: 16,
+    },
+    aboutLogo: {
+        width: 140,
+        height: 140,
+        alignSelf: 'center',
+        marginVertical: 16,
+    },
+    aboutText: {
+        fontSize: 15,
+        color: '#000000',
+        textAlign: 'center',
+        lineHeight: 22,
+        fontWeight: '500',
+        paddingHorizontal: 8,
+        marginBottom: 24,
     },
 });
 

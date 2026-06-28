@@ -169,3 +169,38 @@ create policy "inventory_beneficiary_select" on inventory for select using (auth
 -- Transactions: staff manage everything; beneficiaries see only their own (their "transaction logs" tab).
 create policy "transactions_staff_all" on transactions for all using (public.is_staff()) with check (public.is_staff());
 create policy "transactions_beneficiary_select" on transactions for select using (beneficiary_id = auth.uid());
+
+-- ============ Milk Requests ============
+create table milk_requests (
+  request_id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles(id) on delete cascade,
+  pg1_first_name text not null,
+  pg1_last_name text not null,
+  pg1_relationship text not null,
+  pg1_contact_num text not null,
+  pg1_email text not null,
+  pg2_first_name text,
+  pg2_last_name text,
+  pg2_relationship text,
+  pg2_contact_num text,
+  pg2_email text,
+  address_street text not null,
+  address_street2 text,
+  address_city text not null,
+  address_zip text not null,
+  infant_name text not null,
+  infant_age text not null,
+  infant_weight text not null,
+  additional_info text,
+  queue_position integer default 100,
+  estimated_wait_days integer default 14,
+  milk_volume text default '500ml',
+  status text not null default 'pending',
+  created_at timestamptz not null default now()
+);
+
+alter table milk_requests enable row level security;
+create policy "milk_requests_self_select" on milk_requests for select using (user_id = auth.uid());
+create policy "milk_requests_self_insert" on milk_requests for insert with check (user_id = auth.uid());
+create policy "milk_requests_self_update" on milk_requests for update using (user_id = auth.uid());
+create policy "milk_requests_staff_all" on milk_requests for all using (public.is_staff()) with check (public.is_staff());

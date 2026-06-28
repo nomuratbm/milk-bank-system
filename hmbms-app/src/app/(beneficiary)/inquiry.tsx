@@ -1,18 +1,45 @@
 import * as React from "react";
+import { useState, useEffect } from "react";
 import {
     StyleSheet,
     Text,
     View,
     TextInput,
     TouchableOpacity,
+    ScrollView,
 } from "react-native";
 import Svg, { Path, Rect, G } from "react-native-svg";
 
 interface InquiryScreenProps {
     onNavigateToQueue?: () => void;
+    scrollToContact?: boolean;
+    onContactScrolled?: () => void;
+    mainScrollViewRef?: React.RefObject<ScrollView | null>;
 }
 
-const SupsupTodoDashboardEmailInquiry: React.FC<InquiryScreenProps> = ({ onNavigateToQueue }) => {
+const SupsupTodoDashboardEmailInquiry: React.FC<InquiryScreenProps> = ({
+    onNavigateToQueue,
+    scrollToContact,
+    onContactScrolled,
+    mainScrollViewRef
+}) => {
+    const [contactY, setContactY] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (scrollToContact && contactY !== null && mainScrollViewRef?.current) {
+            // Scroll to 115 + contactY (115 is top offset of the screen component in the parent ScrollView)
+            // subtracting 20 gives a little breathing room/margin at the top.
+            mainScrollViewRef.current.scrollTo({ y: 115 + contactY - 20, animated: true });
+            if (onContactScrolled) {
+                onContactScrolled();
+            }
+        }
+    }, [scrollToContact, contactY, mainScrollViewRef]);
+
+    const handleContactUsLayout = (event: any) => {
+        setContactY(event.nativeEvent.layout.y);
+    };
+
     return (
         <View style={styles.backgroundContainer}>
             <View style={styles.scrollContent}>
@@ -111,7 +138,7 @@ const SupsupTodoDashboardEmailInquiry: React.FC<InquiryScreenProps> = ({ onNavig
                 </View>
 
                 {/* FORM HEADER */}
-                <Text style={styles.contactFormTitle}>Contact us!</Text>
+                <Text style={styles.contactFormTitle} onLayout={handleContactUsLayout}>Contact us!</Text>
 
                 {/* INPUT GROUPS */}
                 <View style={styles.inputGroup}>

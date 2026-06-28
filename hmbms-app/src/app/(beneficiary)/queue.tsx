@@ -1,294 +1,316 @@
-import * as React from "react";
+import React, { useState, useEffect } from 'react';
 import {
     StyleSheet,
     Text,
     View,
-    TextInput,
-    TouchableOpacity,
-} from "react-native";
-import Svg, { Path } from "react-native-svg";
+    SafeAreaView,
+    ScrollView,
+    ActivityIndicator,
+} from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
+// import { supabase } from '@/lib/supabase'; // <-- Replace with your actual Supabase client import
 
-const SupsupTodoDashboardEmailInquiry = () => {
+// Define the shape of our order data
+interface OrderData {
+    queue_position: number | null;
+    estimated_wait_days: number | null;
+    request_id: string | null;
+    date_time: string | null;
+    baby_age: string | null;
+    milk_volume: string | null;
+}
+
+interface QueueScreenProps {
+    onNavigateToInquiry?: () => void;
+}
+
+const QueueScreen: React.FC<QueueScreenProps> = ({ onNavigateToInquiry }) => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [orderData, setOrderData] = useState<OrderData>({
+        queue_position: null,
+        estimated_wait_days: null,
+        request_id: null,
+        date_time: null,
+        baby_age: null,
+        milk_volume: null,
+    });
+
+    useEffect(() => {
+        fetchQueueData();
+    }, []);
+
+    const fetchQueueData = async () => {
+        setIsLoading(true);
+        try {
+            // === SUPABASE INTEGRATION ===
+            // Replace 'milk_requests' and the user matching logic with your actual table and auth logic.
+            /*
+            const { data: user } = await supabase.auth.getUser();
+            const { data, error } = await supabase
+                .from('milk_requests')
+                .select('*')
+                .eq('user_id', user?.user?.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+
+            if (data && !error) {
+                setOrderData({
+                    queue_position: data.queue_position || null,
+                    estimated_wait_days: data.estimated_wait_days || null,
+                    request_id: data.request_id || null,
+                    date_time: data.created_at || null, // Format this date as needed
+                    baby_age: data.baby_age || null,
+                    milk_volume: data.milk_volume || null,
+                });
+            }
+            */
+
+            // Simulating a network request for demonstration
+            setTimeout(() => {
+                // To test the empty state ("--"), change this to simulate an empty response
+                const hasData = true;
+
+                if (hasData) {
+                    setOrderData({
+                        queue_position: 67,
+                        estimated_wait_days: 0, // Set to 0 to test the completed (green, 100% filled) state
+                        request_id: '0001202606111458',
+                        date_time: 'June 11, 2026 @2:58PM',
+                        baby_age: '6 months old',
+                        milk_volume: '500ml',
+                    });
+                }
+                setIsLoading(false);
+            }, 1000);
+
+        } catch (error) {
+            console.error("Error fetching queue data:", error);
+            setIsLoading(false);
+        }
+    };
+
+    const hasPosition = orderData.queue_position !== null;
+
+    const maxWaitDays = 30;
+    const waitDays = orderData.estimated_wait_days !== null ? orderData.estimated_wait_days : maxWaitDays;
+    const progressPercent = Math.max(0, Math.min(100, ((maxWaitDays - waitDays) / maxWaitDays) * 100));
+    const isCompleted = waitDays === 0;
+
     return (
-        <View style={styles.scrollContent}>
-            {/* Intro Headers */}
-            <Text style={styles.mainHeading}>Request Milk for your Baby</Text>
-            <Text style={styles.subHeading}>Get safe donor milk from the Makati Human Milk Bank.</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+            >
+                {/* MAIN CONTENT PADDING */}
+                <View style={styles.mainContent}>
 
-            <Text style={styles.howItWorksHeading}>HOW IT WORKS</Text>
+                    {/* QUEUE POSITION CARD */}
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>Awesome!</Text>
+                        <Text style={styles.cardTitle}>Your milk’s on its way!</Text>
+                        <Text style={styles.queueLabel}>Queue Position:</Text>
 
-            {/* STEP 1 BOX */}
-            <View style={styles.stepCard}>
-                <View style={styles.iconCircleContainer}>
-                    <View style={styles.circleGraphicBackground} />
-                    <Svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D265C" strokeWidth="2.5">
-                        <Path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" strokeLinejoin="round" />
-                        <Path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" strokeLinejoin="round" />
-                    </Svg>
+                        {isLoading ? (
+                            <ActivityIndicator size="large" color="#FFD230" style={{ marginVertical: 20 }} />
+                        ) : (
+                            <Text style={styles.queueNumber}>
+                                {hasPosition ? orderData.queue_position : '- -'}
+                            </Text>
+                        )}
+
+                        {/* Progress Bar Container */}
+                        <View style={styles.progressBarContainer}>
+                            <View style={styles.progressBarTrack} />
+                            <View style={[
+                                styles.progressBarFill,
+                                {
+                                    width: `${progressPercent}%`,
+                                    backgroundColor: isCompleted ? '#4CD964' : '#FFD230'
+                                }
+                            ]} />
+                            <View style={[
+                                styles.progressDot,
+                                {
+                                    left: `${progressPercent}%`,
+                                    backgroundColor: isCompleted ? '#4CD964' : '#FFD230'
+                                }
+                            ]} />
+                        </View>
+
+                        <Text style={styles.statusText}>Your order has been processed.</Text>
+                        <Text style={styles.waitTimeText}>
+                            Estimated Wait Time: {orderData.estimated_wait_days ? `${orderData.estimated_wait_days} days.` : '--'}
+                        </Text>
+                    </View>
+
+                    {/* SUBTEXT */}
+                    <Text style={styles.relaxText}>
+                        We’ll let you know once your milk’s ready. Sit back and relax!
+                    </Text>
+
+                    {/* ORDER DETAILS CARD */}
+                    <View style={styles.card}>
+                        <Text style={styles.orderDetailsTitle}>Order Details</Text>
+
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Request ID: </Text>
+                            <Text style={styles.detailValue}>{orderData.request_id || '--'}</Text>
+                        </View>
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Date and Time: </Text>
+                            <Text style={styles.detailValue}>{orderData.date_time || '--'}</Text>
+                        </View>
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Baby's Age: </Text>
+                            <Text style={styles.detailValue}>{orderData.baby_age || '--'}</Text>
+                        </View>
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Milk Volume: </Text>
+                            <Text style={styles.detailValue}>{orderData.milk_volume || '--'}</Text>
+                        </View>
+                    </View>
+
+                    {/* SUPPORT TEXT */}
+                    <Text style={styles.supportText}>
+                        Questions? Contact support <Text style={styles.supportLink} onPress={onNavigateToInquiry}>here</Text>.
+                    </Text>
+
                 </View>
-                <View style={styles.cardTextContent}>
-                    <Text style={styles.stepLabel}>STEP 1</Text>
-                    <Text style={styles.stepTitle}>Submit an inquiry</Text>
-                    <Text style={styles.stepDescription}>Fill out the form below to register.</Text>
-                </View>
-            </View>
-
-            {/* STEP 2 BOX */}
-            <View style={styles.stepCard}>
-                <View style={styles.iconCircleContainer}>
-                    <View style={styles.circleGraphicBackground} />
-                    <Svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D265C" strokeWidth="2.5">
-                        <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" strokeLinejoin="round" strokeLinecap="round" />
-                    </Svg>
-                </View>
-                <View style={styles.cardTextContent}>
-                    <Text style={styles.stepLabel}>STEP 2</Text>
-                    <Text style={styles.stepTitle}>Get notified</Text>
-                    <Text style={styles.stepDescription}>You’ll be placed in a queue and receive an email once milk becomes available.</Text>
-                </View>
-            </View>
-
-            {/* STEP 3 BOX */}
-            <View style={styles.stepCard}>
-                <View style={styles.iconCircleContainer}>
-                    <View style={styles.circleGraphicBackground} />
-                    <Svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D265C" strokeWidth="2.5">
-                        <Path d="M9 11h6v10H9V11zM10 7.5a2 2 0 0 1 4 0V11h-4V7.5zM12 2v3" strokeLinecap="round" strokeLinejoin="round" />
-                    </Svg>
-                </View>
-                <View style={styles.cardTextContent}>
-                    <Text style={styles.stepLabel}>STEP 3</Text>
-                    <Text style={styles.stepTitle}>Receive donor milk</Text>
-                    <Text style={styles.stepDescription}>Claim your milk.</Text>
-                </View>
-            </View>
-
-            {/* YELLOW READY TO PROCEED CTA BANNER */}
-            <View style={styles.ctaBannerContainer}>
-                <View style={styles.ctaTextContainer}>
-                    <Text style={styles.ctaLabel}>READY TO PROCEED?</Text>
-                    <Text style={styles.ctaTitle}>Order Milk</Text>
-                    <Text style={styles.ctaDescription}>Tap to place your request.</Text>
-                </View>
-                <View style={styles.ctaArrowCircle}>
-                    <Svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1D265C" strokeWidth="2.5">
-                        <Path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" strokeLinejoin="round" strokeLinecap="round" />
-                    </Svg>
-                </View>
-            </View>
-
-            {/* FORM HEADER */}
-            <Text style={styles.contactFormTitle}>Contact us!</Text>
-
-            {/* INPUT GROUPS */}
-            <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>First Name</Text>
-                <TextInput style={styles.textInput} placeholder="Enter your first name" placeholderTextColor="#B3B3B3" />
-            </View>
-
-            <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Last Name</Text>
-                <TextInput style={styles.textInput} placeholder="Enter your last name" placeholderTextColor="#B3B3B3" />
-            </View>
-
-            <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Email Address</Text>
-                <TextInput style={styles.textInput} placeholder="Enter your email address" placeholderTextColor="#B3B3B3" keyboardType="email-address" />
-            </View>
-
-            <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Inquiry</Text>
-                <TextInput
-                    style={[styles.textInput, styles.textAreaInput]}
-                    placeholder="Enter Inquiry"
-                    placeholderTextColor="#B3B3B3"
-                    multiline={true}
-                    numberOfLines={5}
-                    textAlignVertical="top"
-                />
-            </View>
-
-            {/* SUBMIT BUTTON */}
-            <TouchableOpacity style={styles.submitButton} activeOpacity={0.8}>
-                <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
-        </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: '#FFFFFF', // Changed to match the inner background rather than repeating the wave
+    },
     scrollContent: {
+        flexGrow: 1,
+        paddingBottom: 40, // Reduced padding since the custom bottom nav is removed
+    },
+    // MAIN CONTENT STYLES
+    mainContent: {
         paddingHorizontal: 24,
-        paddingTop: 24,
-        paddingBottom: 40,
+        paddingTop: 20,
     },
-    mainHeading: {
-        fontSize: 24,
-        fontWeight: '600',
-        fontFamily: 'Inter-SemiBold',
-        color: '#000000',
-        marginBottom: 6,
-    },
-    subHeading: {
-        fontSize: 16,
-        fontWeight: '300',
-        fontFamily: 'Inter-Light',
-        color: '#333333',
-        marginBottom: 24,
-    },
-    howItWorksHeading: {
-        fontSize: 18,
-        fontWeight: '500',
-        fontFamily: 'Inter-Medium',
-        fontStyle: 'italic',
-        color: '#000000',
-        marginBottom: 16,
-    },
-    stepCard: {
-        flexDirection: 'row',
+    card: {
         backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 24,
+        marginBottom: 24,
         borderWidth: 1,
         borderColor: '#E3E3E3',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
+        // Shadow for depth
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
         alignItems: 'center',
     },
-    iconCircleContainer: {
-        position: 'relative',
-        width: 60,
-        height: 60,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
+    cardTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#000000',
+        textAlign: 'center',
     },
-    circleGraphicBackground: {
-        position: 'absolute',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        backgroundColor: '#FFF192',
-        opacity: 0.6,
-    },
-    cardTextContent: {
-        flex: 1,
-    },
-    stepLabel: {
-        fontSize: 13,
-        fontWeight: '500',
-        fontFamily: 'Inter-Medium',
-        fontStyle: 'italic',
-        color: '#666666',
-        marginBottom: 2,
-    },
-    stepTitle: {
-        fontSize: 15,
+    queueLabel: {
+        fontSize: 18,
         fontWeight: '600',
-        fontFamily: 'Inter-SemiBold',
         color: '#000000',
-        marginBottom: 4,
-    },
-    stepDescription: {
-        fontSize: 11,
-        fontWeight: '300',
-        fontFamily: 'Inter-Light',
-        color: '#444444',
-        lineHeight: 15,
-    },
-    ctaBannerContainer: {
-        flexDirection: 'row',
-        backgroundColor: '#FFD230',
-        borderWidth: 1,
-        borderColor: '#1E1E1E',
-        borderRadius: 12,
-        padding: 18,
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginTop: 8,
-        marginBottom: 32,
-    },
-    ctaTextContainer: {
-        flex: 1,
-    },
-    ctaLabel: {
-        fontSize: 14,
-        fontWeight: '500',
-        fontFamily: 'Inter-Medium',
-        fontStyle: 'italic',
-        color: '#000000',
-        marginBottom: 2,
-    },
-    ctaTitle: {
-        fontSize: 16,
-        fontWeight: '600',
-        fontFamily: 'Inter-SemiBold',
-        color: '#000000',
-        marginBottom: 4,
-    },
-    ctaDescription: {
-        fontSize: 11,
-        fontWeight: '300',
-        fontFamily: 'Inter-Light',
-        color: '#000000',
-    },
-    ctaArrowCircle: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
-        backgroundColor: '#FFFFFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#000000',
-    },
-    contactFormTitle: {
-        fontSize: 24,
-        fontWeight: '600',
-        fontFamily: 'Inter-SemiBold',
-        color: '#000000',
-        marginBottom: 16,
-    },
-    inputGroup: {
-        width: '100%',
-        marginBottom: 16,
-    },
-    inputLabel: {
-        fontSize: 13,
-        fontWeight: '300',
-        fontFamily: 'Inter-Light',
-        color: '#000000',
-        marginBottom: 6,
-    },
-    textInput: {
-        width: '100%',
-        height: 46,
-        borderWidth: 1,
-        borderColor: '#D9D9D9',
-        borderRadius: 8,
-        paddingHorizontal: 16,
-        fontSize: 15,
-        color: '#000000',
-        backgroundColor: '#FFFFFF',
-    },
-    textAreaInput: {
-        height: 120,
-        paddingTop: 12,
-        paddingBottom: 12,
-    },
-    submitButton: {
-        width: '100%',
-        height: 48,
-        backgroundColor: '#FFD230',
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
         marginTop: 16,
     },
-    submitButtonText: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#1E1E1E',
+    queueNumber: {
+        fontSize: 84,
+        fontWeight: '800',
+        color: '#000000',
+        lineHeight: 90,
+        marginTop: -5,
+        marginBottom: 10,
     },
+    progressBarContainer: {
+        width: '100%',
+        height: 6,
+        justifyContent: 'center',
+        marginVertical: 16,
+    },
+    progressBarTrack: {
+        width: '100%',
+        height: 4,
+        backgroundColor: '#E6E6E6',
+        borderRadius: 2,
+    },
+    progressBarFill: {
+        position: 'absolute',
+        left: 0,
+        height: 4,
+        borderRadius: 2,
+    },
+    progressDot: {
+        position: 'absolute',
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginLeft: -4,
+    },
+    statusText: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: '#000000',
+        marginBottom: 4,
+    },
+    waitTimeText: {
+        fontSize: 13,
+        fontWeight: '400',
+        color: '#000000',
+    },
+    relaxText: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#000000',
+        textAlign: 'left',
+        marginBottom: 24,
+        lineHeight: 28,
+    },
+    orderDetailsTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#000000',
+        marginBottom: 16,
+        alignSelf: 'flex-start',
+    },
+    detailRow: {
+        flexDirection: 'row',
+        width: '100%',
+        marginBottom: 8,
+    },
+    detailLabel: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#000000',
+    },
+    detailValue: {
+        fontSize: 14,
+        fontWeight: '400',
+        color: '#333333',
+    },
+    supportText: {
+        fontSize: 13,
+        color: '#000000',
+        textAlign: 'center',
+        marginTop: 10,
+        marginBottom: 20,
+    },
+    supportLink: {
+        color: '#000000',
+        fontWeight: '700',
+        textDecorationLine: 'underline',
+    }
 });
 
-export default SupsupTodoDashboardEmailInquiry;
+export default QueueScreen;
