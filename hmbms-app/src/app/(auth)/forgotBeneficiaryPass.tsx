@@ -6,7 +6,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import TopBrandingSection from "../../components/TopBrandingSection";
-import { authService } from "@/services/auth/authService";
+import { authService } from "../../services/auth/authService";
 
 const ForgotBeneficiaryPass: React.FC = () => {
   const router = useRouter();

@@ -10,10 +10,7 @@ interface SignupData {
 
 export const authService = {
   async signIn(email: string, password: string) {
-    return supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    return supabase.auth.signInWithPassword({ email, password });
   },
 
   async signUp(data: SignupData) {
@@ -39,9 +36,7 @@ export const authService = {
   },
 
   async updatePassword(password: string) {
-    return supabase.auth.updateUser({
-      password,
-    });
+    return supabase.auth.updateUser({ password });
   },
 
   async getCurrentSession() {
@@ -49,6 +44,6 @@ export const authService = {
   },
 
   async getCurrentUser() {
-    return await supabase.auth.getUser();
+    return supabase.auth.getUser();
   },
 };

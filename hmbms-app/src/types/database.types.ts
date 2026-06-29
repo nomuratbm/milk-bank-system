@@ -15,6 +15,7 @@ export interface Beneficiary {
   email: string | null;
   contact_num: string | null;
   registered_at: string;
+  avatar_url: string | null;
 }
 
 export interface Donor {

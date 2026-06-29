@@ -9,9 +9,8 @@ import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
-// Use require() instead of import for assets with spaces in their filenames
-const motherBabyIcon  = require('../../../assets/images/Group 13.png');
-const homeBgImage     = require('../../../assets/images/Home Page.png');
+const motherBabyIcon   = require('../../../assets/images/Group 13.png');
+const homeBgImage      = require('../../../assets/images/Home Page.png');
 const unionSplashImage  = require('../../../assets/images/Union.png');
 const union1SplashImage = require('../../../assets/images/Union1.png');
 const union2SplashImage = require('../../../assets/images/Union2.png');
@@ -115,9 +114,11 @@ const SelectProgram: React.FC = () => {
 
         if (buttonRef.current) {
             buttonRef.current.measure((x, y, btnWidth, btnHeight, pageX, pageY) => {
-                const cx = typeof pageX === 'number' ? pageX + btnWidth / 2 : width / 2;
-                const cy = typeof pageY === 'number' ? pageY + btnHeight / 2 : height / 2;
-                startAnimation(cx, cy);
+                if (typeof pageX === 'number' && typeof pageY === 'number') {
+                    startAnimation(pageX + btnWidth / 2, pageY + btnHeight / 2);
+                } else {
+                    startAnimation(width / 2, height / 2);
+                }
             });
         } else {
             startAnimation(width / 2, height / 2);
@@ -139,14 +140,20 @@ const SelectProgram: React.FC = () => {
 
             {isAnimating && (
                 <View
-                    style={[styles.splashContainer, { left: splashOrigin.x - 50, top: splashOrigin.y - 50 }]}
+                    style={[
+                        styles.splashContainer,
+                        { left: splashOrigin.x - 50, top: splashOrigin.y - 50 },
+                    ]}
                     pointerEvents="none"
                 >
                     <Animated.Image
                         source={splashImageSource}
                         style={[
                             styles.splashShape,
-                            { transform: [{ scale: splashScale }, { rotate }], opacity: splashOpacity },
+                            {
+                                transform: [{ scale: splashScale }, { rotate }],
+                                opacity: splashOpacity,
+                            },
                         ]}
                         resizeMode="contain"
                     />
@@ -155,7 +162,10 @@ const SelectProgram: React.FC = () => {
 
             <SafeAreaView style={styles.safeArea}>
                 <ScrollView
-                    contentContainerStyle={[styles.scrollContainer, { paddingHorizontal: isLandscape ? 40 : 20 }]}
+                    contentContainerStyle={[
+                        styles.scrollContainer,
+                        { paddingHorizontal: isLandscape ? 40 : 20 },
+                    ]}
                     bounces={false}
                     showsVerticalScrollIndicator={false}
                 >
@@ -167,7 +177,9 @@ const SelectProgram: React.FC = () => {
                         />
                     </View>
 
-                    <Text style={[styles.welcomeText, { marginBottom: welcomeMarginBottom }]}>Welcome!</Text>
+                    <Text style={[styles.welcomeText, { marginBottom: welcomeMarginBottom }]}>
+                        Welcome!
+                    </Text>
 
                     <TouchableOpacity
                         ref={supsupButtonRef}

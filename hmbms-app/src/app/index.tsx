@@ -1,11 +1,25 @@
-import { ActivityIndicator, Text, View, StyleSheet } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 
 export default function Index() {
   const { session, role, programId, loading } = useAuth();
+  const [checkingFirstOpen, setCheckingFirstOpen] = useState(true);
+  const [isFirstOpen, setIsFirstOpen] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    AsyncStorage.getItem("hasLaunched").then((value) => {
+      if (value === null) {
+        AsyncStorage.setItem("hasLaunched", "true");
+        setIsFirstOpen(true);
+      }
+      setCheckingFirstOpen(false);
+    });
+  }, []);
+
+  if (loading || checkingFirstOpen) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color="#27978b" />
@@ -14,32 +28,36 @@ export default function Index() {
     );
   }
 
-  // No session — send to landing page to pick a role
+  // Very first time ever — show welcome
+  if (isFirstOpen && !session) {
+    return <Redirect href="/welcome" />;
+  }
+
+  // No session — go to landing
   if (!session) {
     return <Redirect href="/landing" />;
   }
 
-  // Signed in as staff — go straight to staff home
+  // Staff — staff home
   if (role === "staff") {
     return <Redirect href="/(staff)/home" />;
   }
 
-  // Signed in as beneficiary but hasn't picked a program yet
+  // Beneficiary without program — onboarding
   if (role === "beneficiary" && programId === null) {
     return <Redirect href="/(onboarding)/selectProgram" />;
   }
 
-  // Signed in as beneficiary with a program — go to beneficiary home
+  // Beneficiary with program — beneficiary home
   if (role === "beneficiary" && programId !== null) {
     return <Redirect href="/(beneficiary)/home" />;
   }
 
-  // Signed in but no profile row found — account setup incomplete
+  // No profile row — incomplete account
   return (
     <View className="flex-1 items-center justify-center bg-white px-6">
       <Text className="text-center text-ink-600">
-        Your account isn't fully set up yet. Please contact a milk bank
-        administrator.
+        Your account isn't fully set up yet. Please contact a milk bank administrator.
       </Text>
     </View>
   );

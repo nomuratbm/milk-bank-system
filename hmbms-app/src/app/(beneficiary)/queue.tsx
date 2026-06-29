@@ -1,15 +1,7 @@
 // src/app/(beneficiary)/queue.tsx
 import React, { useState, useEffect } from 'react';
-import {
-    StyleSheet,
-    Text,
-    View,
-    SafeAreaView,
-    ScrollView,
-    ActivityIndicator,
-} from 'react-native';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, ActivityIndicator } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
-import { supabase } from '@/lib/supabase';
 
 interface OrderData {
     queue_position: number | null;
@@ -53,7 +45,6 @@ const QueueScreen: React.FC<QueueScreenProps> = ({ onNavigateToInquiry }) => {
                 .order('created_at', { ascending: false })
                 .limit(1)
                 .single();
-
             if (data && !error) {
                 setOrderData({
                     queue_position: data.queue_position || null,
@@ -65,24 +56,19 @@ const QueueScreen: React.FC<QueueScreenProps> = ({ onNavigateToInquiry }) => {
                 });
             }
             */
-
             setTimeout(() => {
-                const hasData = true;
-                if (hasData) {
-                    setOrderData({
-                        queue_position: 67,
-                        estimated_wait_days: 0,
-                        request_id: '0001202606111458',
-                        date_time: 'June 11, 2026 @2:58PM',
-                        baby_age: '6 months old',
-                        milk_volume: '500ml',
-                    });
-                }
+                setOrderData({
+                    queue_position: 67,
+                    estimated_wait_days: 0,
+                    request_id: '0001202606111458',
+                    date_time: 'June 11, 2026 @2:58PM',
+                    baby_age: '6 months old',
+                    milk_volume: '500ml',
+                });
                 setIsLoading(false);
             }, 1000);
-
         } catch (error) {
-            console.error("Error fetching queue data:", error);
+            console.error('Error fetching queue data:', error);
             setIsLoading(false);
         }
     };
@@ -92,6 +78,7 @@ const QueueScreen: React.FC<QueueScreenProps> = ({ onNavigateToInquiry }) => {
     const waitDays = orderData.estimated_wait_days !== null ? orderData.estimated_wait_days : maxWaitDays;
     const progressPercent = Math.max(0, Math.min(100, ((maxWaitDays - waitDays) / maxWaitDays) * 100));
     const isCompleted = waitDays === 0;
+    const progressColor = isCompleted ? '#4CD964' : theme.accent;
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -100,18 +87,21 @@ const QueueScreen: React.FC<QueueScreenProps> = ({ onNavigateToInquiry }) => {
 
                     <View style={styles.card}>
                         <Text style={styles.cardTitle}>Awesome!</Text>
-                        <Text style={styles.cardTitle}>Your milk's on its way!</Text>
+                        <Text style={styles.cardTitle}>Your milk's on its way! 🥰</Text>
                         <Text style={styles.queueLabel}>Queue Position:</Text>
+
                         {isLoading ? (
                             <ActivityIndicator size="large" color={theme.accent} style={{ marginVertical: 20 }} />
                         ) : (
                             <Text style={styles.queueNumber}>{hasPosition ? orderData.queue_position : '- -'}</Text>
                         )}
+
                         <View style={styles.progressBarContainer}>
                             <View style={styles.progressBarTrack} />
-                            <View style={[styles.progressBarFill, { width: `${progressPercent}%`, backgroundColor: isCompleted ? '#4CD964' : theme.accent }]} />
-                            <View style={[styles.progressDot, { left: `${progressPercent}%`, backgroundColor: isCompleted ? '#4CD964' : theme.accent }]} />
+                            <View style={[styles.progressBarFill, { width: `${progressPercent}%`, backgroundColor: progressColor }]} />
+                            <View style={[styles.progressDot, { left: `${progressPercent}%`, backgroundColor: progressColor }]} />
                         </View>
+
                         <Text style={styles.statusText}>Your order has been processed.</Text>
                         <Text style={styles.waitTimeText}>
                             Estimated Wait Time: {orderData.estimated_wait_days ? `${orderData.estimated_wait_days} days.` : '--'}
@@ -141,9 +131,9 @@ const QueueScreen: React.FC<QueueScreenProps> = ({ onNavigateToInquiry }) => {
                     </View>
 
                     <Text style={styles.supportText}>
-                        Questions? Contact support <Text style={styles.supportLink} onPress={onNavigateToInquiry}>here</Text>.
+                        Questions? Contact support{' '}
+                        <Text style={styles.supportLink} onPress={onNavigateToInquiry}>here</Text>.
                     </Text>
-
                 </View>
             </ScrollView>
         </SafeAreaView>
