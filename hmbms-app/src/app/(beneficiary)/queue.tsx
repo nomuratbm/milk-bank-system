@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, ActivityIndicator } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
+import { supabase } from '../../lib/supabase';
 
 interface OrderData {
     queue_position: number | null;
@@ -35,40 +36,36 @@ const QueueScreen: React.FC<QueueScreenProps> = ({ onNavigateToInquiry }) => {
     const fetchQueueData = async () => {
         setIsLoading(true);
         try {
-            // === SUPABASE INTEGRATION ===
-            /*
-            const { data: user } = await supabase.auth.getUser();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                setIsLoading(false);
+                return;
+            }
             const { data, error } = await supabase
                 .from('milk_requests')
-                .select('*')
-                .eq('user_id', user?.user?.id)
+                .select('queue_position, estimated_wait_days, id, created_at, infant_age_months')
+                .eq('user_id', user.id)
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
             if (data && !error) {
                 setOrderData({
-                    queue_position: data.queue_position || null,
-                    estimated_wait_days: data.estimated_wait_days || null,
-                    request_id: data.request_id || null,
-                    date_time: data.created_at || null,
-                    baby_age: data.baby_age || null,
-                    milk_volume: data.milk_volume || null,
+                    queue_position: data.queue_position ?? null,
+                    estimated_wait_days: data.estimated_wait_days ?? null,
+                    request_id: data.id ?? null,
+                    date_time: data.created_at
+                        ? new Date(data.created_at).toLocaleString('en-US', {
+                            month: 'long', day: 'numeric', year: 'numeric',
+                            hour: 'numeric', minute: '2-digit', hour12: true,
+                        })
+                        : null,
+                    baby_age: data.infant_age_months !== null ? `${data.infant_age_months} months` : null,
+                    milk_volume: null,
                 });
             }
-            */
-            setTimeout(() => {
-                setOrderData({
-                    queue_position: 67,
-                    estimated_wait_days: 0,
-                    request_id: '0001202606111458',
-                    date_time: 'June 11, 2026 @2:58PM',
-                    baby_age: '6 months old',
-                    milk_volume: '500ml',
-                });
-                setIsLoading(false);
-            }, 1000);
         } catch (error) {
             console.error('Error fetching queue data:', error);
+        } finally {
             setIsLoading(false);
         }
     };

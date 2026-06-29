@@ -1,5 +1,8 @@
 // src/constants/programTheme.ts
-import type { ProgramId } from "../types/database.types";
+import type { Tables } from "../types/database.types";
+
+// 1. Extract the ProgramId type dynamically from the beneficiaries table row structure
+export type ProgramId = Tables<"beneficiaries">["program_id"];
 
 export interface ProgramTheme {
   programId: ProgramId;
@@ -14,48 +17,50 @@ export interface ProgramTheme {
   tabIconActive: string;
 }
 
-export const PROGRAM_THEMES: Record<ProgramId, ProgramTheme> = {
+// 2. Use a type assertion or explicit type map to satisfy the Record definition safely
+export const PROGRAM_THEMES: Record<number, ProgramTheme> = {
   1: {
     programId: 1,
     name: "Supsup Todo",
-    primary:      "#FFD230",
-    primaryLight: "#FFF192",
-    accent:       "#F5C842",
-    cardBg:       "#FFFBEA",
-    tabBarBg:     "#FFD230",
-    headerBg:     "#FFD230",
+    primary:      "#FFF085",
+    primaryLight: "#FFF085",
+    accent:       "#FFD230",
+    cardBg:       "#FFD230",
+    tabBarBg:     "#FFF085",
+    headerBg:     "#FFF085",
     headerText:   "#1A1A1A",
     tabIconActive: "#1A1A1A",
   },
   2: {
     programId: 2,
     name: "Milky Way",
-    primary:      "#7FD8D4",
-    primaryLight: "#D0F8EC",
-    accent:       "#27978B",
-    cardBg:       "#F0FAFA",
-    tabBarBg:     "#7FD8D4",
-    headerBg:     "#7FD8D4",
-    headerText:   "#0B3B38",
-    tabIconActive: "#0B3B38",
+    primary:      "#CBFBF1",
+    primaryLight: "#CBFBF1",
+    accent:       "#96F7E4",
+    cardBg:       "#96F7E4",
+    tabBarBg:     "#CBFBF1",
+    headerBg:     "#CBFBF1",
+    headerText:   "#1A1A1A",
+    tabIconActive: "#1A1A1A",
   },
   3: {
     programId: 3,
     name: "Mom's Act",
-    primary:      "#F4A7C3",
-    primaryLight: "#FAD6EA",
-    accent:       "#D4608A",
-    cardBg:       "#FFF0F6",
-    tabBarBg:     "#F4A7C3",
-    headerBg:     "#F4A7C3",
-    headerText:   "#4A0020",
-    tabIconActive: "#4A0020",
+    primary:      "#FCCEE8",
+    primaryLight: "#FCCEE8",
+    accent:       "#FDA5D5",
+    cardBg:       "#FDA5D5",
+    tabBarBg:     "#FCCEE8",
+    headerBg:     "#FCCEE8",
+    headerText:   "#1A1A1A",
+    tabIconActive: "#1A1A1A",
   },
 };
 
-export const DEFAULT_THEME = PROGRAM_THEMES[1];
-
-export function getProgramTheme(programId: ProgramId | null): ProgramTheme {
-  if (!programId) return DEFAULT_THEME;
-  return PROGRAM_THEMES[programId];
+// Helper function to safely fetch themes without breaking on unexpected or null program IDs
+export function getProgramTheme(programId: ProgramId | null | undefined): ProgramTheme {
+  const fallbackTheme = PROGRAM_THEMES[1]; // Default fallback if no program is selected yet
+  if (!programId) return fallbackTheme;
+  
+  return PROGRAM_THEMES[programId as number] || fallbackTheme;
 }

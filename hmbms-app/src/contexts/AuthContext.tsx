@@ -7,8 +7,16 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import type { UserRole, ProgramId, Profile, Beneficiary } from "../types/database.types";
+// 1. Import the Tables helper from your newly generated database types
+import type { Tables } from "../types/database.types";
 import { authService } from "../services/auth/authService";
+import * as Linking from "expo-linking";
+
+// 2. Derive the missing types cleanly from the generated database schema
+export type Profile = Tables<"profiles">;
+export type Beneficiary = Tables<"beneficiaries">;
+export type UserRole = Profile["account_type"];  // dynamically infers string from profiles
+export type ProgramId = Beneficiary["program_id"]; // dynamically infers number from beneficiaries
 
 interface AuthContextValue {
   session: Session | null;
@@ -68,7 +76,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const createSessionFromUrl = async (url: string) => {
+    const parsed = Linking.parse(url);
+    const { access_token, refresh_token } = parsed.queryParams || {};
+
+    if (access_token && refresh_token) {
+      setLoading(true);
+      const { error } = await supabase.auth.setSession({
+        access_token: access_token as string,
+        refresh_token: refresh_token as string,
+      });
+
+      if (error) {
+        console.error("Error setting session from deep link:", error.message);
+        setLoading(false);
+      }
+    }
+  };
+
   useEffect(() => {
+    Linking.getInitialURL().then((url) => {
+      if (url) createSessionFromUrl(url);
+    });
+
+    const subscription = Linking.addEventListener("url", (event) => {
+      if (event.url) createSessionFromUrl(event.url);
+    });
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setCurrentSession(session);
       if (session?.user) {
@@ -89,7 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      listener.subscription.unsubscribe();
+      subscription.remove();
+    }
   }, []);
 
   async function signOut() {

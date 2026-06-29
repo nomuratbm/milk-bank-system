@@ -8,9 +8,11 @@
     "scheme": "hmbmsapp",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.yourname.hmbmsapp",
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.yourname.hmbmsapp",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

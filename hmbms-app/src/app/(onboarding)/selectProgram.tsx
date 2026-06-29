@@ -31,7 +31,7 @@ const PROGRAM_IDS = {
 
 const SelectProgram: React.FC = () => {
     const router = useRouter();
-    const { session } = useAuth();
+    const { session, refreshProfile } = useAuth();
     const { width, height } = useWindowDimensions();
     const isLandscape = width > height;
 
@@ -50,35 +50,42 @@ const SelectProgram: React.FC = () => {
     const welcomeMarginBottom = isLandscape ? 15 : 40;
     const buttonWidth         = isLandscape ? '50%' : '80%';
 
-    const saveProgramAndNavigate = async (programId: 1 | 2 | 3) => {
-        if (!session?.user) return;
+const saveProgramAndNavigate = async (programId: 1 | 2 | 3) => {
+    if (!session?.user) return;
 
-        const { error } = await supabase
-            .from('beneficiaries')
-            .update({ program_id: programId })
-            .eq('id', session.user.id);
+    const { error } = await supabase
+        .from('beneficiaries')
+        .upsert({
+            id: session.user.id,
+            program_id: programId,
+            first_name: session.user.user_metadata?.full_name?.split(' ')[0] ?? '',
+            last_name: session.user.user_metadata?.full_name?.split(' ').slice(1).join(' ') ?? '',
+            email: session.user.email ?? null,
+        } as any, { onConflict: 'id' });
 
-        if (error) {
+    if (error) {
+        splashScale.setValue(0);
+        splashRotation.setValue(0);
+        setIsAnimating(false);
+        Alert.alert('Error', 'Could not save your program selection. Please try again.');
+        return;
+    }
+
+    await refreshProfile?.();
+
+    router.replace('/(beneficiary)/home');
+
+    setTimeout(() => {
+        Animated.timing(splashOpacity, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+            }).start(() => {
             splashScale.setValue(0);
             splashRotation.setValue(0);
             setIsAnimating(false);
-            Alert.alert('Error', 'Could not save your program selection. Please try again.');
-            return;
-        }
-
-        router.replace('/(beneficiary)/home');
-
-        setTimeout(() => {
-            Animated.timing(splashOpacity, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }).start(() => {
-                splashScale.setValue(0);
-                splashRotation.setValue(0);
-                setIsAnimating(false);
-            });
-        }, 500);
+        });
+    }, 500);
     };
 
     const triggerSplashAnimation = (
@@ -113,17 +120,24 @@ const SelectProgram: React.FC = () => {
         };
 
         if (buttonRef.current) {
-            buttonRef.current.measure((x, y, btnWidth, btnHeight, pageX, pageY) => {
+            (buttonRef.current as any).measure((
+                x: number, 
+                y: number, 
+                btnWidth: number, 
+                btnHeight: number, 
+                pageX: number, 
+                pageY: number
+            ) => {
                 if (typeof pageX === 'number' && typeof pageY === 'number') {
-                    startAnimation(pageX + btnWidth / 2, pageY + btnHeight / 2);
+                startAnimation(pageX + btnWidth / 2, pageY + btnHeight / 2);
                 } else {
                     startAnimation(width / 2, height / 2);
                 }
             });
-        } else {
-            startAnimation(width / 2, height / 2);
-        }
-    };
+            } else {
+                startAnimation(width / 2, height / 2);
+            }
+        };
 
     const rotate = splashRotation.interpolate({
         inputRange:  [0, 1],

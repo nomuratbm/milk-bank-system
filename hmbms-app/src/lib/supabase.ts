@@ -2,6 +2,7 @@ import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import { Platform } from "react-native";
+// Import the core Database type map
 import type { Database } from "../types/database.types";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -14,12 +15,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // SSR-safe storage adapter:
-// - Node.js (SSR): no-op, avoids the `window is not defined` crash
-// - Web browser: uses localStorage
-// - Native (iOS/Android): uses AsyncStorage
 const storage =
   typeof window === "undefined"
-    ? undefined                          // SSR / Node — skip storage entirely
+    ? undefined                          
     : Platform.OS === "web"
     ? {
         getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
@@ -28,6 +26,7 @@ const storage =
       }
     : AsyncStorage;
 
+// Explicitly pass <Database> into createClient to bind type generation perfectly
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage,

@@ -2,7 +2,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, SafeAreaView, StatusBar } from "react-native";
 import { useRouter } from "expo-router";
-import TopBrandingSection from "@/components/TopBrandingSection";
+import TopBrandingSection from "../components/TopBrandingSection";
 
 const WelcomeScreen: React.FC = () => {
   const router = useRouter();

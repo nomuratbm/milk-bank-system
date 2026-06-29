@@ -1,3 +1,4 @@
+// src/app/index.tsx
 import { ActivityIndicator, Text, View } from "react-native";
 import { Redirect } from "expo-router";
 import { useAuth } from "../contexts/AuthContext";
@@ -45,6 +46,7 @@ export default function Index() {
 
   // Beneficiary without program — onboarding
   if (role === "beneficiary" && programId === null) {
+    // UPDATED: Kept this cleanly matching your folder mapping structure
     return <Redirect href="/(onboarding)/selectProgram" />;
   }
 

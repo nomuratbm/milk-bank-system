@@ -1,5 +1,5 @@
 // src/app/(beneficiary)/home.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react'; 
 import {
     StyleSheet, View, Text, TouchableOpacity, SafeAreaView,
     StatusBar, Dimensions, ScrollView, ImageBackground, Image,
@@ -7,6 +7,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 import InquiryScreen from './inquiry';
 import QueueScreen from './queue';
@@ -18,6 +19,7 @@ type ScreenType = 'home' | 'inquiry' | 'queue' | 'forms' | 'profile';
 
 const HomeScreen: React.FC = () => {
     const theme = useTheme();
+    const { programId } = useAuth(); // 👈 Watch the programId so the component updates color dynamically
     const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
     const [shouldScrollToContact, setShouldScrollToContact] = useState(false);
     const scrollViewRef = useRef<ScrollView>(null);
@@ -31,8 +33,10 @@ const HomeScreen: React.FC = () => {
             try {
                 const { data: { user } } = await supabase.auth.getUser();
                 if (user) {
+                    // Update this query to match your actual database configuration 
+                    // or setup a 'milk_requests' table in your Supabase Dashboard
                     const { data: request } = await (supabase as any)
-                        .from('milk_requests')
+                        .from('milk_requests') 
                         .select('queue_position, estimated_wait_days')
                         .eq('user_id', user.id)
                         .order('created_at', { ascending: false })
@@ -48,7 +52,7 @@ const HomeScreen: React.FC = () => {
             }
         };
         fetchQueueData();
-    }, [currentScreen]);
+    }, [currentScreen, programId]);
 
     const renderHeaderTitle = () => {
         const letters: Record<ScreenType, { char: string; y: number; r: string }[]> = {

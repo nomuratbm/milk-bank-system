@@ -1,10 +1,9 @@
 // src/app/(beneficiary)/forms.tsx
 import * as React from "react";
-import { ScrollView, StyleSheet, View, Text, TextInput, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
-import { supabase } from "@/lib/supabase";
+import { StyleSheet, View, Text, TextInput, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import { createMilkRequest } from "@/services/beneficiary/milkRequestService";
-import { authService } from "@/services/auth/authService";
+import { createMilkRequest } from "../../services/beneficiary/milkRequestService";
+import { supabase } from '../../lib/supabase';
 
 interface FormsScreenProps {
     onNavigateToInquiry?: () => void;
@@ -37,72 +36,52 @@ const FormsScreen: React.FC<FormsScreenProps> = ({ onNavigateToInquiry }) => {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
 
     const handleSubmit = async () => {
-        const isPg1Invalid = !formData.pg1FirstName.trim() || !formData.pg1LastName.trim() ||
-            !formData.pg1Relationship.trim() || !formData.pg1ContactNumber.trim() || !formData.pg1Email.trim();
-        const isAddressInvalid = !formData.addressStreet.trim() || !formData.addressCity.trim() || !formData.addressZip.trim();
-        const isInfantInvalid = !formData.infantName.trim() || !formData.infantAge.trim() || !formData.infantWeight.trim();
+        const isPg1Invalid = !formData.pg1FirstName || !formData.pg1LastName || !formData.pg1Relationship || !formData.pg1ContactNumber;
+        const isAddressInvalid = !formData.addressStreet || !formData.addressCity || !formData.addressZip;
+        const isInfantInvalid = !formData.infantName || !formData.infantAge;
 
         if (isPg1Invalid || isAddressInvalid || isInfantInvalid) {
             setShowErrors(true);
-            Alert.alert("Missing Required Information", "Please fill out all the required fields highlighted in red.");
+            Alert.alert("Missing Fields", "Please populate all mandatory fields highlighted in your intake form.");
             return;
         }
 
         setIsSubmitting(true);
         try {
-            const { data: userData } = await authService.getCurrentUser();
-            if (userError || !userData?.user) {
-                Alert.alert("Authentication Required", "Please log in to submit your form.");
+            // 1. Fetch the authenticated user's session
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            
+            if (authError || !user) {
+                Alert.alert("Authentication Error", "You must be logged in to submit a request.");
                 setIsSubmitting(false);
                 return;
             }
 
-            const { error } = await createMilkRequest({
-                user_id: userData.user.id,
-                pg1_first_name: formData.pg1FirstName,
-                pg1_last_name: formData.pg1LastName,
-                pg1_relationship: formData.pg1Relationship,
-                pg1_contact_num: formData.pg1ContactNumber,
-                pg1_email: formData.pg1Email,
+            // 2. Safely parse the age to a number
+            const numericAgeMonths = parseInt(formData.infantAge, 10) || 0;
 
-                pg2_first_name: formData.pg2FirstName || null,
-                pg2_last_name: formData.pg2LastName || null,
-                pg2_relationship: formData.pg2Relationship || null,
-                pg2_contact_num: formData.pg2ContactNumber || null,
-                pg2_email: formData.pg2Email || null,
-
-                address_street: formData.addressStreet,
-                address_street2: formData.addressStreet2 || null,
-                address_city: formData.addressCity,
-                address_zip: formData.addressZip,
-
+            // 3. Construct the complete payload, including the required user_id
+            const payload = {
+                user_id: user.id,            // 👈 Added the missing required field
                 infant_name: formData.infantName,
-                infant_age: formData.infantAge,
-                infant_weight: formData.infantWeight,
+                infant_age_months: numericAgeMonths,
+            };
 
-                additional_info: formData.additionalInfo || null,
-            });
-
-            if (error) {
-                Alert.alert("Submission Failed", error.message || "Could not insert request.");
-            } else {
-                Alert.alert("Request Submitted", "Your milk request form has been submitted successfully!", [{
-                    text: "OK",
-                    onPress: () => {
-                        setFormData({ pg1FirstName: "", pg1LastName: "", pg1Relationship: "", pg1ContactNumber: "", pg1Email: "", pg2FirstName: "", pg2LastName: "", pg2Relationship: "", pg2ContactNumber: "", pg2Email: "", addressStreet: "", addressStreet2: "", addressCity: "", addressZip: "", infantName: "", infantAge: "", infantWeight: "", additionalInfo: "" });
-                        setShowErrors(false);
-                    }
-                }]);
+            const response = await createMilkRequest(payload);
+            if (response) {
+                Alert.alert("Success", "Your application has been safely indexed in the distribution pool.");
+                if (onNavigateToInquiry) onNavigateToInquiry();
             }
-        } catch (e: any) {
-            Alert.alert("Submission Error", e.message || "An unexpected error occurred.");
+        } catch (error) {
+            console.error("Submission error:", error);
+            Alert.alert("Error", "Could not commit records to backend infrastructure.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
     return (
-        <View style={[styles.container, { height: 1800 }]}>
+        <View style={[styles.container, { height: 1780 }]}>
             <View style={styles.liftedHeaderGroup}>
                 <Text style={styles.newFillHeader}>Fill out the form below</Text>
                 <Text style={styles.newSubHeader}>Get safe donor milk from the Makati Human Milk Bank.</Text>
@@ -242,7 +221,7 @@ const styles = StyleSheet.create({
     zipCode: { top: 1138 },
     button: { marginLeft: -150, top: 1669, width: 300, height: 42, padding: 11, overflow: "hidden", borderWidth: 1, borderRadius: 8, justifyContent: "center", borderStyle: "solid", left: "50%" },
     button2: { color: "#1e1e1e", textAlign: "center", lineHeight: 16, fontWeight: "700", fontSize: 16, fontFamily: "Inter-Bold" },
-    input17: { top: 1340.5, left: 30.5 },
+    input17: { top: 1340.5, left: 28.5 },
     step1Box: { top: 1417, left: 26 },
     doYouHaveContainer: { top: 1631, fontSize: 14 },
     doYouHaveTypo: { fontFamily: "Inter-SemiBold", fontWeight: "600" },

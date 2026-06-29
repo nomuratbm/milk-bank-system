@@ -6,7 +6,6 @@ import {
     View,
     TouchableOpacity,
     TextInput,
-    Image,
     ActivityIndicator,
     Alert,
 } from "react-native";
@@ -14,8 +13,10 @@ import Svg, { Path } from "react-native-svg";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
-import type { Beneficiary } from "../../types/database.types";
+import type { Tables } from "../../types/database.types";
 import { useTheme } from "../../contexts/ThemeContext";
+
+type Beneficiary = Tables<"beneficiaries">;
 
 const ProfileScreen = () => {
     const theme = useTheme();
@@ -24,6 +25,10 @@ const ProfileScreen = () => {
     const [beneficiary, setBeneficiary] = useState<Beneficiary | null>(null);
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState<"profile" | "change_password" | "edit_profile">("profile");
+    const [infantInfo, setInfantInfo] = useState<{ name: string | null; age_months: number | null }>({ 
+        name: null, 
+        age_months: null 
+    });
 
     // Form inputs for change password
     const [oldPassword, setOldPassword] = useState("");
@@ -38,23 +43,36 @@ const ProfileScreen = () => {
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        async function fetchBeneficiary() {
-            if (!session?.user) {
+        async function loadProfileData() {
+            setLoading(true);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return;
+
+                const { data, error } = await supabase
+                    .from('milk_requests')
+                    .select('infant_name, infant_age_months')
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (data) {
+                    setInfantInfo({
+                        name: data.infant_name || "N/A",
+                        age_months: data.infant_age_months !== undefined ? data.infant_age_months : null
+                    });
+                }
+            } catch (err) {
+                console.error("Error loading profile:", err);
+            } finally {
                 setLoading(false);
-                return;
             }
-            const { data, error } = await supabase
-                .from("beneficiaries")
-                .select("*")
-                .eq("id", session.user.id)
-                .single();
-            if (!error && data) {
-                setBeneficiary(data as Beneficiary);
-            }
-            setLoading(false);
         }
-        fetchBeneficiary();
-    }, [session]);
+        loadProfileData();
+    }, []);
 
     const handleLogout = () => {
         Alert.alert("Logout", "Are you sure you want to log out?", [
@@ -230,10 +248,11 @@ const ProfileScreen = () => {
     const displayEmail =
         beneficiary?.email ?? session?.user?.email ?? "—";
 
-    const displayAvatarUrl = beneficiary?.avatar_url ?? null;
-
-    const infantName = "Kitkat Villaluz";
-    const infantAge = "10 months old";
+    const avatarLetter = (
+        beneficiary?.first_name?.[0] ??
+        session?.user?.user_metadata?.full_name?.[0] ??
+        'U'
+    ).toUpperCase();
 
     if (loading) {
         return (
@@ -344,22 +363,7 @@ const ProfileScreen = () => {
                 <View style={styles.avatarSection}>
                     <View style={styles.avatarRing}>
                         <View style={styles.avatarInner}>
-                            {displayAvatarUrl ? (
-                                <Image
-                                    source={{ uri: displayAvatarUrl }}
-                                    style={{ width: 120, height: 120 }}
-                                    resizeMode="cover"
-                                />
-                            ) : (
-                                <Svg
-                                    width="64"
-                                    height="64"
-                                    viewBox="0 0 24 24"
-                                    fill="#B0B0B0"
-                                >
-                                    <Path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .66.54 1.2 1.2 1.2h16.8c.66 0 1.2-.54 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z" />
-                                </Svg>
-                            )}
+                            <Text style={styles.avatarLetter}>{avatarLetter}</Text>
                         </View>
                     </View>
                 </View>
@@ -458,22 +462,7 @@ const ProfileScreen = () => {
             <View style={styles.avatarSection}>
                 <View style={styles.avatarRing}>
                     <View style={styles.avatarInner}>
-                        {displayAvatarUrl ? (
-                            <Image
-                                source={{ uri: displayAvatarUrl }}
-                                style={{ width: 120, height: 120 }}
-                                resizeMode="cover"
-                            />
-                        ) : (
-                            <Svg
-                                width="64"
-                                height="64"
-                                viewBox="0 0 24 24"
-                                fill="#B0B0B0"
-                            >
-                                <Path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .66.54 1.2 1.2 1.2h16.8c.66 0 1.2-.54 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z" />
-                            </Svg>
-                        )}
+                        <Text style={styles.avatarLetter}>{avatarLetter}</Text>
                     </View>
                     <TouchableOpacity style={styles.editBadge} activeOpacity={0.7} onPress={handleEnterEditProfile}>
                         <Svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2.5">
@@ -494,11 +483,13 @@ const ProfileScreen = () => {
                 <View style={styles.infoSection}>
                     <Text style={styles.infoText}>
                         <Text style={styles.infoLabel}>Name of Infant: </Text>
-                        <Text style={styles.infoValue}>{infantName}</Text>
+                        <Text style={styles.infoValue}>{infantInfo.name ?? '—'}</Text>
                     </Text>
                     <Text style={styles.infoText}>
-                        <Text style={styles.infoLabel}>Age: </Text>
-                        <Text style={styles.infoValue}>{infantAge}</Text>
+                        <Text style={styles.infoLabel}>Infant Age: </Text>
+                        <Text style={styles.infoValue}>
+                            {infantInfo.age_months !== null ? `${infantInfo.age_months} Months` : "N/A"}
+                        </Text>
                     </Text>
                 </View>
 
@@ -586,11 +577,16 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         position: "relative",
     },
+    avatarLetter: {
+        fontSize: 52,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
     avatarInner: {
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: "#E8E8E8",
+        backgroundColor: "#1D265C" ,
         justifyContent: "center",
         alignItems: "center",
         overflow: "hidden",

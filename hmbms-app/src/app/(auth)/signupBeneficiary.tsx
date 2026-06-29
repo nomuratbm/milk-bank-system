@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity,
-  SafeAreaView, StatusBar, ScrollView, Image,
+  SafeAreaView, StatusBar, ScrollView,
   Alert, ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -17,6 +17,8 @@ const SignupBeneficiary: React.FC = () => {
   const [password, setPassword] = useState("");
   const [isAgreed, setIsAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const isDisabled = !fullName || !email || !password || !isAgreed || loading;
 
   const handleSignup = async () => {
     if (!fullName || !email || !password) {
@@ -37,13 +39,11 @@ const SignupBeneficiary: React.FC = () => {
     } else {
       Alert.alert(
         "Account Created",
-        "Please check your email to verify your account, then log in.",
-        [{ text: "OK", onPress: () => router.replace("/loginBeneficiary") }]
+        "Please check your email to verify your account.",
+        [{ text: "OK", onPress: () => router.push("/loginBeneficiary") }]
       );
     }
   };
-
-  const isDisabled = !isAgreed || loading;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -54,20 +54,10 @@ const SignupBeneficiary: React.FC = () => {
         className="flex-1 bg-navy"
         contentContainerClassName="px-8 pt-4 pb-12"
       >
-        {/* Header */}
-        <View className="flex-row justify-between items-center mb-8">
-          <Text className="text-white text-3xl font-bold">Sign Up</Text>
-          <View className="flex-row items-center border border-white/30 rounded-xl px-2.5 py-1.5 bg-navy-badge">
-            <Image
-              source={{ uri: "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/78bLcHxrTT/2jpqab9q_expires_30_days.png" }}
-              resizeMode="stretch"
-              className="w-4 h-3 rounded-full mr-1.5"
-            />
-            <Text className="text-ink-400 text-[10px] font-bold">Beneficiary Signup</Text>
-          </View>
-        </View>
+        <Text className="text-white text-3xl font-bold self-start mb-10">
+          Create Account
+        </Text>
 
-        {/* Full Name */}
         <View className="mb-5 w-full">
           <Text className="text-white text-base font-bold mb-2">Full Name</Text>
           <TextInput
@@ -79,11 +69,10 @@ const SignupBeneficiary: React.FC = () => {
           />
         </View>
 
-        {/* Email */}
         <View className="mb-5 w-full">
-          <Text className="text-white text-base font-bold mb-2">Email</Text>
+          <Text className="text-white text-base font-bold mb-2">Email Address</Text>
           <TextInput
-            placeholder="Enter your email"
+            placeholder="Enter your email address"
             placeholderTextColor="#B3B3B380"
             value={email}
             onChangeText={setEmail}
@@ -93,7 +82,6 @@ const SignupBeneficiary: React.FC = () => {
           />
         </View>
 
-        {/* Mobile */}
         <View className="mb-5 w-full">
           <Text className="text-white text-base font-bold mb-2">Mobile Number</Text>
           <TextInput
@@ -106,11 +94,10 @@ const SignupBeneficiary: React.FC = () => {
           />
         </View>
 
-        {/* Password */}
-        <View className="mb-5 w-full">
+        <View className="mb-8 w-full">
           <Text className="text-white text-base font-bold mb-2">Password</Text>
           <TextInput
-            placeholder="Enter your password"
+            placeholder="Create a password"
             placeholderTextColor="#B3B3B380"
             value={password}
             onChangeText={setPassword}
@@ -119,11 +106,10 @@ const SignupBeneficiary: React.FC = () => {
           />
         </View>
 
-        {/* Terms checkbox */}
         <TouchableOpacity
-          className="flex-row items-center mt-2.5 mb-8 w-full"
           activeOpacity={0.8}
           onPress={() => setIsAgreed(!isAgreed)}
+          className="flex-row items-center mb-8 w-full"
         >
           <View
             className={`w-5 h-5 rounded border-[1.5px] justify-center items-center mr-3 ${
@@ -137,7 +123,6 @@ const SignupBeneficiary: React.FC = () => {
           </Text>
         </TouchableOpacity>
 
-        {/* Sign up button */}
         <View className="items-center mb-6 w-full">
           <TouchableOpacity
             className={`bg-white rounded-lg py-3.5 justify-center items-center w-full ${isDisabled ? "opacity-50" : ""}`}
@@ -145,14 +130,14 @@ const SignupBeneficiary: React.FC = () => {
             onPress={handleSignup}
             activeOpacity={0.8}
           >
-            {loading
-              ? <ActivityIndicator color="#1E1E1E" />
-              : <Text className="text-ink text-base font-bold">Sign Up</Text>
-            }
+            {loading ? (
+              <ActivityIndicator color="#1E1E1E" />
+            ) : (
+              <Text className="text-ink text-base font-bold">Sign Up</Text>
+            )}
           </TouchableOpacity>
         </View>
 
-        {/* Login redirect */}
         <TouchableOpacity
           className="items-center mb-5 w-full"
           onPress={() => router.push("/loginBeneficiary")}
