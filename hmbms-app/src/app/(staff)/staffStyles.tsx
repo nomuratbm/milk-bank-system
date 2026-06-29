@@ -40,7 +40,7 @@ export const TopBrandingSection: React.FC<{
                 {/* Logo + background image — only shown on Home screen */}
                 {showLogo && (
                     <ImageBackground
-                        source={require('../../assets/group119.png')}
+                        source={require('../../../assets/images/group119.png')}
                         style={headerStyles.logoImageBg}
                         resizeMode="cover"
                     >
