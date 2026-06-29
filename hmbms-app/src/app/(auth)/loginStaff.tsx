@@ -6,8 +6,8 @@ import {
   Alert, ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { supabase } from "../../lib/supabase";
 import TopBrandingSection from "../../components/TopBrandingSection";
+import { authService } from "../../services/auth/authService";
 
 const LoginStaff: React.FC = () => {
   const router = useRouter();
@@ -21,7 +21,7 @@ const LoginStaff: React.FC = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await authService.signIn(email, password);
     setLoading(false);
     if (error) Alert.alert("Login Failed", error.message);
     // On success, AuthContext updates → index.tsx redirects to /(staff)/home

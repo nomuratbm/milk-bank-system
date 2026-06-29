@@ -3,6 +3,7 @@ import * as React from "react";
 import { ScrollView, StyleSheet, View, Text, TextInput, Alert, ActivityIndicator, TouchableOpacity } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { useTheme } from "../../contexts/ThemeContext";
+import { createMilkRequest } from "@/services/beneficiary/milkRequestService";
 
 interface FormsScreenProps {
     onNavigateToInquiry?: () => void;
@@ -48,36 +49,38 @@ const FormsScreen: React.FC<FormsScreenProps> = ({ onNavigateToInquiry }) => {
 
         setIsSubmitting(true);
         try {
-            const { data: userData, error: userError } = await supabase.auth.getUser();
+            const { data: userData } = await authService.getCurrentUser();
             if (userError || !userData?.user) {
                 Alert.alert("Authentication Required", "Please log in to submit your form.");
                 setIsSubmitting(false);
                 return;
             }
 
-            const { error } = await (supabase as any)
-                .from('milk_requests')
-                .insert([{
-                    user_id: userData.user.id,
-                    pg1_first_name: formData.pg1FirstName,
-                    pg1_last_name: formData.pg1LastName,
-                    pg1_relationship: formData.pg1Relationship,
-                    pg1_contact_num: formData.pg1ContactNumber,
-                    pg1_email: formData.pg1Email,
-                    pg2_first_name: formData.pg2FirstName || null,
-                    pg2_last_name: formData.pg2LastName || null,
-                    pg2_relationship: formData.pg2Relationship || null,
-                    pg2_contact_num: formData.pg2ContactNumber || null,
-                    pg2_email: formData.pg2Email || null,
-                    address_street: formData.addressStreet,
-                    address_street2: formData.addressStreet2 || null,
-                    address_city: formData.addressCity,
-                    address_zip: formData.addressZip,
-                    infant_name: formData.infantName,
-                    infant_age: formData.infantAge,
-                    infant_weight: formData.infantWeight,
-                    additional_info: formData.additionalInfo || null,
-                }]);
+            const { error } = await createMilkRequest({
+                user_id: userData.user.id,
+                pg1_first_name: formData.pg1FirstName,
+                pg1_last_name: formData.pg1LastName,
+                pg1_relationship: formData.pg1Relationship,
+                pg1_contact_num: formData.pg1ContactNumber,
+                pg1_email: formData.pg1Email,
+
+                pg2_first_name: formData.pg2FirstName || null,
+                pg2_last_name: formData.pg2LastName || null,
+                pg2_relationship: formData.pg2Relationship || null,
+                pg2_contact_num: formData.pg2ContactNumber || null,
+                pg2_email: formData.pg2Email || null,
+
+                address_street: formData.addressStreet,
+                address_street2: formData.addressStreet2 || null,
+                address_city: formData.addressCity,
+                address_zip: formData.addressZip,
+
+                infant_name: formData.infantName,
+                infant_age: formData.infantAge,
+                infant_weight: formData.infantWeight,
+
+                additional_info: formData.additionalInfo || null,
+            });
 
             if (error) {
                 Alert.alert("Submission Failed", error.message || "Could not insert request.");

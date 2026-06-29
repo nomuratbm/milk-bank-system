@@ -1,6 +1,6 @@
 // src/app/(beneficiary)/inquiry.tsx
 import * as React from "react";
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import Svg, { Path, Rect, G } from "react-native-svg";
 import { useTheme } from "../../contexts/ThemeContext";
 
@@ -8,11 +8,25 @@ interface InquiryScreenProps {
     onNavigateToQueue?: () => void;
 }
 
+const [firstName, setFirstName] = React.useState("");
+const [lastName, setLastName] = React.useState("");
+const [email, setEmail] = React.useState("");
+const [inquiry, setInquiry] = React.useState("");
+
+function handleSubmit() {
+    console.log({
+        firstName,
+        lastName,
+        email,
+        inquiry,
+    });
+}
+
 const InquiryScreen: React.FC<InquiryScreenProps> = ({ onNavigateToQueue }) => {
     const theme = useTheme();
 
     return (
-        <View style={styles.backgroundContainer}>
+        <ScrollView style={styles.backgroundContainer} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
             <View style={styles.scrollContent}>
                 <Text style={styles.mainHeading}>Request Milk for your Baby</Text>
                 <Text style={styles.subHeading}>Get safe donor milk from the Makati Human Milk Bank.</Text>
@@ -94,26 +108,26 @@ const InquiryScreen: React.FC<InquiryScreenProps> = ({ onNavigateToQueue }) => {
 
                 <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>First Name</Text>
-                    <TextInput style={styles.textInput} placeholder="Enter your first name" placeholderTextColor="#B3B3B3" />
+                    <TextInput value={firstName} onChangeText={setFirstName} style={styles.textInput} placeholder="Enter your first name" placeholderTextColor="#B3B3B3" />
                 </View>
                 <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Last Name</Text>
-                    <TextInput style={styles.textInput} placeholder="Enter your last name" placeholderTextColor="#B3B3B3" />
+                    <TextInput value={lastName} onChangeText={setLastName} style={styles.textInput} placeholder="Enter your last name" placeholderTextColor="#B3B3B3" />
                 </View>
                 <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Email Address</Text>
-                    <TextInput style={styles.textInput} placeholder="Enter your email address" placeholderTextColor="#B3B3B3" keyboardType="email-address" />
+                    <TextInput value={email} onChangeText={setEmail} style={styles.textInput} placeholder="Enter your email address" placeholderTextColor="#B3B3B3" keyboardType="email-address" />
                 </View>
                 <View style={styles.inputGroup}>
                     <Text style={styles.inputLabel}>Inquiry</Text>
-                    <TextInput style={[styles.textInput, styles.textAreaInput]} placeholder="Enter Inquiry" placeholderTextColor="#B3B3B3" multiline numberOfLines={5} textAlignVertical="top" />
+                    <TextInput value={inquiry} onChangeText={setInquiry} style={[styles.textInput, styles.textAreaInput]} placeholder="Enter Inquiry" placeholderTextColor="#B3B3B3" multiline numberOfLines={5} textAlignVertical="top" />
                 </View>
 
-                <TouchableOpacity style={[styles.submitButton, { backgroundColor: theme.accent }]} activeOpacity={0.8}>
+                <TouchableOpacity style={[styles.submitButton, { backgroundColor: theme.accent }]} activeOpacity={0.8} onPress={handleSubmit}>
                     <Text style={styles.submitButtonText}>Submit</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </ScrollView>
     );
 };
 

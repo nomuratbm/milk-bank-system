@@ -5,8 +5,8 @@ import {
   SafeAreaView, StatusBar, ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { supabase } from "../../lib/supabase";
 import TopBrandingSection from "../../components/TopBrandingSection";
+import { authService } from "@/services/auth/authService";
 
 const ForgotStaffPass: React.FC = () => {
   const router = useRouter();
@@ -16,7 +16,7 @@ const ForgotStaffPass: React.FC = () => {
   const handleSend = async () => {
     if (!email) return;
     setLoading(true);
-    await supabase.auth.resetPasswordForEmail(email);
+    await authService.resetPassword(email);
     setLoading(false);
     router.push("/completeStaff");
   };

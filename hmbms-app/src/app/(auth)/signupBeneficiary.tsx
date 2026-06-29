@@ -6,7 +6,7 @@ import {
   Alert, ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { supabase } from "../../lib/supabase";
+import { authService } from "../../services/auth/authService";
 import TopBrandingSection from "../../components/TopBrandingSection";
 
 const SignupBeneficiary: React.FC = () => {
@@ -24,16 +24,12 @@ const SignupBeneficiary: React.FC = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { error } = await authService.signUp({
+      fullName,
       email,
+      mobileNumber,
       password,
-      options: {
-        data: {
-          full_name: fullName,
-          mobile_number: mobileNumber,
-          account_type: "beneficiary",
-        },
-      },
+      accountType: "beneficiary",
     });
     setLoading(false);
     if (error) {
