@@ -9,44 +9,50 @@ import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
 
 function RootLayoutNav() {
-  const { session, role, loading } = useAuth();
+  const { session, role, programId, loading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
-    // Wait until the authentication state is finished checking
+    // Don't do anything while auth is still loading
     if (loading) return;
+    // Don't redirect if role hasn't resolved from DB yet
+    if (session && role === null) return;
 
     // Determine if the user is currently inside an authentication route group
     const inAuthGroup = segments[0] === "(auth)";
+    const inOnboarding = segments[0] === "(onboarding)";
+    const inStaff = segments[0] === "(staff)";
+    const inBeneficiary = segments[0] === "(beneficiary)";
 
-    if (session) {
-      // 1. User is logged in. If they are still stuck on the login/auth screens, move them out!
-      if (inAuthGroup || segments.length === 0) {
-        if (role === "beneficiary") {
-          // Route immediately to the beneficiary application home
-          router.replace("/(beneficiary)/home"); 
-        } else if (role === "staff" || role === "admin") {
-          // Route immediately to the staff layout dashboard
-          router.replace("/(staff)/home"); 
-        }
-      }
-    } else {
-      // 2. User is logged out. Kick them back to the landing or login screen automatically.
+    if (!session) {
+      // Not logged in — send to auth screens if not already there
       if (!inAuthGroup) {
         router.replace("/landing");
       }
+      return;
     }
-  }, [session, role, loading, segments]);
 
-  // Render a clean loading state while checking database cookies to avoid UI layout flashes
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#FFFFFF" }}>
-        <ActivityIndicator size="large" color="#000000" />
-      </View>
-    );
-  }
+    // Logged in as staff
+    if (role === "staff") {
+      if (!inStaff) {
+        router.replace("/(staff)/home");
+      }
+      return;
+    }
+
+    // Logged in as beneficiary
+    if (role === "beneficiary") {
+      if (programId === null && !inOnboarding) {
+        router.replace("/(onboarding)/selectProgram");
+        return;
+      }
+      if (programId !== null && !inBeneficiary) {
+        router.replace("/(beneficiary)/home");
+        return;
+      }
+    }
+  }, [session, role, programId, loading, segments]);
 
   return <Slot />;
 }

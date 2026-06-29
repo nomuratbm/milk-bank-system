@@ -1,367 +1,197 @@
-/**
- * (staff)/registry.tsx
- * ---------------------
- * The Registry screen — shows all Donors and Beneficiaries for the
- * currently selected program.
- */
-
-import React, { useState, useMemo, useEffect } from 'react';
+// src/app/(staff)/registry.tsx
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  StatusBar,
-  Modal,
-  Alert,
+    View, Text, ScrollView, StyleSheet,
+    ActivityIndicator, TouchableOpacity, TextInput,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { PROGRAM_THEMES } from '../../constants/programTheme';
-import type { Database, ProgramId } from '../../types/database.types';
+import type { ProgramId } from '../../types/database.types';
 
-type RegistryTab = 'donors' | 'beneficiaries';
-
-// Precise row types mapping exactly to database schema definitions
-type DonorRow = Database['public']['Tables']['donors']['Row'];
-type BeneficiaryRow = Database['public']['Tables']['beneficiaries']['Row'];
-
-export default function RegistryScreen() {
-  // Local state tracking the active program context for staff viewing
-  const [selectedProgramId, setSelectedProgramId] = useState<ProgramId>(1);
-  const currentTheme = PROGRAM_THEMES[selectedProgramId];
-
-  const [activeTab, setActiveTab] = useState<RegistryTab>('donors');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  // Lists matching database definitions
-  const [donors, setDonors] = useState<DonorRow[]>([]);
-  const [beneficiaries, setBeneficiaries] = useState<BeneficiaryRow[]>([]);
-
-  // Modal and creation form processing state
-  const [modalVisible, setModalVisible] = useState(false);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-
-  useEffect(() => {
-    fetchRecords();
-  }, [selectedProgramId]);
-
-  async function fetchRecords() {
-    setLoading(true);
-    try {
-      const [donorRes, benefRes] = await Promise.all([
-        supabase
-          .from('donors')
-          .select('*')
-          .eq('program_id', selectedProgramId),
-        supabase
-          .from('beneficiaries')
-          .select('*')
-          .eq('program_id', selectedProgramId)
-      ]);
-
-      if (donorRes.data) setDonors(donorRes.data);
-      if (benefRes.data) setBeneficiaries(benefRes.data);
-    } catch (err) {
-      console.error('Error loading registry datasets:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleAddRecord() {
-    if (!firstName.trim() || !lastName.trim()) {
-      Alert.alert('Validation Error', 'First and Last names are required values.');
-      return;
-    }
-
-    try {
-      if (activeTab === 'donors') {
-        const { error } = await supabase.from('donors').insert({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          contact_num: phone.trim() || null,
-          program_id: selectedProgramId,
-        });
-        if (error) throw error;
-      } else {
-        // Generates a mock or temporary valid auth fallback user string id if mandatory
-        const temporaryId = genRandomUUID();
-        const { error } = await supabase.from('beneficiaries').insert({
-          id: temporaryId,
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          contact_num: phone.trim() || null,
-          program_id: selectedProgramId,
-        });
-        if (error) throw error;
-      }
-
-      setModalVisible(false);
-      setFirstName('');
-      setLastName('');
-      setPhone('');
-      fetchRecords();
-    } catch (error: any) {
-      Alert.alert('Action Failed', error.message || 'Could not insert new record.');
-    }
-  }
-
-  function genRandomUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  }
-
-  async function handleRemoveDonor(donorId: string) {
-    Alert.alert(
-      'Confirm Deletion',
-      'Are you sure you want to permanently remove this registry entry?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const { error } = await supabase
-              .from('donors')
-              .delete()
-              .eq('donor_id', donorId);
-
-            if (error) {
-              Alert.alert('Error', error.message);
-            } else {
-              fetchRecords();
-            }
-          }
-        }
-      ]
-    );
-  }
-
-  const filteredItems = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
-    const source = activeTab === 'donors' ? donors : beneficiaries;
-
-    if (!query) return source;
-
-    return source.filter(
-      (item: any) =>
-        item.first_name?.toLowerCase().includes(query) ||
-        item.last_name?.toLowerCase().includes(query)
-    );
-  }, [activeTab, searchQuery, donors, beneficiaries]);
-
-  const getInitials = (first: string, last: string) => {
-    return `${first?.charAt(0) || ''}${last?.charAt(0) || ''}`.toUpperCase();
-  };
-
-  const renderItem = ({ item }: { item: any }) => (
-    <View className="flex-row items-center justify-between p-4 border-b border-gray-100 bg-white">
-      <View className="flex-row items-center flex-1 space-x-3">
-        <View 
-          className="w-10 h-10 rounded-full items-center justify-center bg-gray-100"
-          style={{ backgroundColor: `${currentTheme.accent}20` }}
-        >
-          <Text className="font-bold text-sm" style={{ color: currentTheme.accent }}>
-            {getInitials(item.first_name, item.last_name)}
-          </Text>
-        </View>
-        
-        <View className="flex-1 ml-2">
-          <Text className="text-gray-900 font-semibold text-base">
-            {item.first_name} {item.last_name}
-          </Text>
-          <Text className="text-gray-500 text-xs">
-            {item.contact_num || 'No contact saved'}
-          </Text>
-        </View>
-      </View>
-
-      <View className="flex-row items-center space-x-4">
-        {activeTab === 'donors' && (
-          <TouchableOpacity
-            onPress={() => handleRemoveDonor(item.donor_id)}
-            className="p-2"
-            activeOpacity={0.7}
-          >
-            <Text className="text-red-500 font-bold text-lg">🗑</Text>
-          </TouchableOpacity>
-        )}
-        <Text className="text-gray-300 text-xl font-light ml-2">›</Text>
-      </View>
-    </View>
-  );
-
-  return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Program Header Selector Block */}
-      <View 
-        className="px-6 pt-6 pb-6 rounded-b-[32px]" 
-        style={{ backgroundColor: currentTheme.headerBg }}
-      >
-        <Text className="text-xs font-semibold uppercase tracking-wider opacity-60" style={{ color: currentTheme.headerText }}>
-          Database Registry
-        </Text>
-        <Text className="text-2xl font-bold mt-1" style={{ color: currentTheme.headerText }}>
-          {currentTheme.name} Overview
-        </Text>
-
-        {/* Localized Inline Program Switcher Badges */}
-        <View className="flex-row mt-4 space-x-2">
-          {([1, 2, 3] as ProgramId[]).map((pid) => (
-            <TouchableOpacity
-              key={pid}
-              onPress={() => setSelectedProgramId(pid)}
-              className={`px-4 py-1.5 rounded-full ${selectedProgramId === pid ? 'bg-white' : 'bg-white/20'}`}
-            >
-              <Text 
-                className="text-xs font-bold"
-                style={{ color: selectedProgramId === pid ? '#111827' : '#FFFFFF' }}
-              >
-                Prog {pid}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Real-time Search Box Section */}
-      <View className="px-4 pt-4 pb-2">
-        <View className="flex-row items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-          <Text className="text-gray-400 text-lg mr-2">⌕</Text>
-          <TextInput
-            className="flex-1 text-gray-800 text-sm p-0"
-            placeholder="Search matching entries by name..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text className="text-gray-400 font-bold px-1">✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Quick Action Category Tabs */}
-      <View className="flex-row border-b border-gray-200 mx-4 mt-2">
-        {(['donors', 'beneficiaries'] as RegistryTab[]).map((tab) => {
-          const isTargeted = activeTab === tab;
-          return (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => { setActiveTab(tab); setSearchQuery(''); }}
-              className="flex-1 items-center py-3 relative"
-              activeOpacity={0.7}
-            >
-              <Text className={`text-sm font-bold ${isTargeted ? 'text-gray-900' : 'text-gray-400'}`}>
-                {tab.charAt(0).toUpperCase() + tab.slice(1)} ({tab === 'donors' ? donors.length : beneficiaries.length})
-              </Text>
-              {isTargeted && (
-                <View className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full" style={{ backgroundColor: currentTheme.accent }} />
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* Core Dynamic List Area */}
-      <FlatList
-        data={filteredItems}
-        keyExtractor={(item, index) => {
-            const itemId = 'donor_id' in item ? item.donor_id : item.id;
-            return itemId || index.toString();
-        }}
-        renderItem={renderItem}
-        contentContainerClassName="pb-24"
-        ListEmptyComponent={
-          <View className="py-12 items-center justify-center">
-            <Text className="text-gray-400 text-sm">
-              {loading ? 'Refreshing connections...' : 'No target records matched.'}
-            </Text>
-          </View>
-        }
-      />
-
-      {/* Create Floating Entry Button Layout */}
-      <View className="absolute bottom-4 left-4 right-4 shadow-lg">
-        <TouchableOpacity
-          style={{ backgroundColor: currentTheme.accent }}
-          onPress={() => setModalVisible(true)}
-          className="py-4 rounded-xl items-center justify-center"
-          activeOpacity={0.8}
-        >
-          <Text className="text-gray-900 font-bold text-base">
-            + Append New {activeTab === 'donors' ? 'Donor' : 'Beneficiary'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Insertion Form Modal Context Overlay */}
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-[28px] p-6 space-y-4">
-            <Text className="text-gray-900 font-bold text-lg mb-2">
-              Create Program {activeTab === 'donors' ? 'Donor' : 'Beneficiary'}
-            </Text>
-
-            <View className="space-y-3">
-              <TextInput
-                className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-800"
-                placeholder="Given First Name"
-                placeholderTextColor="#9CA3AF"
-                value={firstName}
-                onChangeText={setFirstName}
-                autoCapitalize="words"
-              />
-              <TextInput
-                className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-800"
-                placeholder="Family Last Name"
-                placeholderTextColor="#9CA3AF"
-                value={lastName}
-                onChangeText={setLastName}
-                autoCapitalize="words"
-              />
-              <TextInput
-                className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-gray-800"
-                placeholder="Mobile Contact Line (Optional)"
-                placeholderTextColor="#9CA3AF"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
-            </View>
-
-            <View className="flex-row space-x-3 pt-4">
-              <TouchableOpacity
-                onPress={() => { setModalVisible(false); setFirstName(''); setLastName(''); setPhone(''); }}
-                className="flex-1 bg-gray-100 py-3.5 rounded-xl items-center"
-              >
-                <Text className="text-gray-600 font-semibold">Discard</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={{ backgroundColor: currentTheme.accent }}
-                onPress={handleAddRecord}
-                className="flex-1 py-3.5 rounded-xl items-center"
-              >
-                <Text className="text-gray-900 font-bold">Commit Save</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
-  );
+interface Props {
+    programId: ProgramId;
 }
+
+interface Beneficiary {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string | null;
+    contact_num: string | null;
+    registered_at: string;
+}
+
+interface Donor {
+    donor_id: string;
+    first_name: string;
+    last_name: string;
+    contact_num: string | null;
+    registered_at: string;
+}
+
+type SubTab = 'beneficiaries' | 'donors';
+
+const RegistryScreen: React.FC<Props> = ({ programId }) => {
+    const theme = PROGRAM_THEMES[programId];
+    const [subTab, setSubTab] = useState<SubTab>('beneficiaries');
+    const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
+    const [donors, setDonors] = useState<Donor[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [search, setSearch] = useState('');
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        if (subTab === 'beneficiaries') {
+            const { data, error } = await supabase
+                .from('beneficiaries')
+                .select('id, first_name, last_name, email, contact_num, registered_at')
+                .eq('program_id', programId)
+                .order('registered_at', { ascending: false });
+            if (!error && data) setBeneficiaries(data as Beneficiary[]);
+        } else {
+            const { data, error } = await supabase
+                .from('donors')
+                .select('donor_id, first_name, last_name, contact_num, created_at')
+                .eq('program_id', programId)
+                .order('created_at', { ascending: false });
+            if (!error && data)
+                setDonors(data.map((d: any) => ({ ...d, registered_at: d.created_at })) as Donor[]);
+        }
+        setLoading(false);
+    }, [subTab, programId]);
+
+    useEffect(() => { fetchData(); }, [fetchData]);
+
+    const filtered = subTab === 'beneficiaries'
+        ? beneficiaries.filter(b =>
+            `${b.first_name} ${b.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
+            (b.email ?? '').toLowerCase().includes(search.toLowerCase())
+          )
+        : donors.filter(d =>
+            `${d.first_name} ${d.last_name}`.toLowerCase().includes(search.toLowerCase())
+          );
+
+    return (
+        <View style={styles.container}>
+            {/* Sub-tab toggle */}
+            <View style={[styles.tabRow, { backgroundColor: theme.primaryLight }]}>
+                {(['beneficiaries', 'donors'] as SubTab[]).map(t => (
+                    <TouchableOpacity
+                        key={t}
+                        style={[styles.tabBtn, subTab === t && { backgroundColor: theme.primary }]}
+                        onPress={() => { setSubTab(t); setSearch(''); }}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={[styles.tabBtnText, subTab === t && styles.tabBtnTextActive]}>
+                            {t === 'beneficiaries' ? 'Beneficiaries' : 'Donors'}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {/* Search */}
+            <View style={styles.searchRow}>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder={`Search ${subTab}…`}
+                    placeholderTextColor="#AAAAAA"
+                    value={search}
+                    onChangeText={setSearch}
+                />
+            </View>
+
+            {loading ? (
+                <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 40 }} />
+            ) : (
+                <ScrollView contentContainerStyle={styles.list}>
+                    {filtered.length === 0 ? (
+                        <Text style={styles.emptyText}>No {subTab} found for {theme.name}.</Text>
+                    ) : (
+                        filtered.map((item: any) => {
+                            const avatarLetter = (item.first_name?.[0] ?? '?').toUpperCase();
+                            return (
+                                <View
+                                    key={item.id ?? item.donor_id}
+                                    style={[styles.card, { borderWidth: 1, borderColor: '#E3E3E3' }]}
+                                >
+                                    <View style={styles.cardRow}>
+                                        <View style={[styles.avatarCircle, { backgroundColor: theme.primary }]}>
+                                            <Text style={styles.avatarLetter}>{avatarLetter}</Text>
+                                        </View>
+                                        <View style={styles.cardBody}>
+                                            <Text style={styles.cardName}>
+                                                {item.first_name} {item.last_name}
+                                            </Text>
+                                            {item.email ? (
+                                                <Text style={styles.cardSub}>{item.email}</Text>
+                                            ) : null}
+                                            {item.contact_num ? (
+                                                <Text style={styles.cardSub}>{item.contact_num}</Text>
+                                            ) : null}
+                                            <Text style={styles.cardDate}>
+                                                Registered:{' '}
+                                                {new Date(item.registered_at).toLocaleDateString('en-US', {
+                                                    month: 'short', day: 'numeric', year: 'numeric',
+                                                })}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                </View>
+                            );
+                        })
+                    )}
+                </ScrollView>
+            )}
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container:          { flex: 1, backgroundColor: '#FFFFFF' },
+    tabRow:             { flexDirection: 'row', margin: 16, borderRadius: 12, padding: 4 },
+    tabBtn:             { flex: 1, paddingVertical: 10, borderRadius: 10, alignItems: 'center' },
+    tabBtnText:         { fontSize: 14, fontWeight: '600', color: '#555555' },
+    tabBtnTextActive:   { color: '#000000', fontWeight: '700' },
+    searchRow:          { paddingHorizontal: 16, marginBottom: 12 },
+    searchInput: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 11,
+        fontSize: 14,
+        color: '#000000',
+        borderWidth: 1,
+        borderColor: '#E3E3E3',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
+    },
+    list:               { paddingHorizontal: 16, paddingBottom: 40 },
+    emptyText:          { textAlign: 'center', marginTop: 40, color: '#AAAAAA', fontSize: 15 },
+    card: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.07,
+        shadowRadius: 3,
+        elevation: 2,
+    },
+    cardRow:            { flexDirection: 'row', alignItems: 'center' },
+    avatarCircle: {
+        width: 46, height: 46, borderRadius: 23,
+        justifyContent: 'center', alignItems: 'center',
+        marginRight: 14,
+    },
+    avatarLetter:       { fontSize: 20, fontWeight: '700', color: '#000000' },
+    cardBody:           { flex: 1 },
+    cardName:           { fontSize: 16, fontWeight: '700', color: '#000000', marginBottom: 2 },
+    cardSub:            { fontSize: 13, color: '#555555', marginBottom: 1 },
+    cardDate:           { fontSize: 12, color: '#AAAAAA', marginTop: 4 },
+});
+
+export default RegistryScreen;

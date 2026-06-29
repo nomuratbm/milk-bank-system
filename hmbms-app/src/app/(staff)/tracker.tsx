@@ -1,229 +1,205 @@
-/**
- * (staff)/tracker.tsx
- * --------------------
- * The Tracker screen — monitors milk batches across laboratory processing 
- * states and view current ready-to-issue product inventory.
- */
-
-import React, { useState, useEffect } from 'react';
+// src/app/(staff)/tracker.tsx
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  ActivityIndicator,
+    View, Text, ScrollView, StyleSheet,
+    ActivityIndicator, TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { PROGRAM_THEMES } from '../../constants/programTheme';
-import type { Database, ProgramId } from '../../types/database.types';
+import type { ProgramId } from '../../types/database.types';
 
-type TrackerTab = 'tracker' | 'inventory';
-
-// Explicit database row definitions
-type MilkBatchRow = Database['public']['Tables']['milk_batches']['Row'];
-type InventoryRow = Database['public']['Tables']['inventory']['Row'];
-
-const BATCH_STEPS = ['Collection', 'Pasteurization', 'Lab Test', 'Approved'];
-
-export default function TrackerScreen() {
-  // Local state tracking the active program context for staff views
-  const [selectedProgramId, setSelectedProgramId] = useState<ProgramId>(1);
-  const currentTheme = PROGRAM_THEMES[selectedProgramId];
-
-  const [activeTab, setActiveTab] = useState<TrackerTab>('tracker');
-  const [loading, setLoading] = useState(true);
-  const [batches, setBatches] = useState<MilkBatchRow[]>([]);
-  const [inventoryItems, setInventoryItems] = useState<InventoryRow[]>([]);
-
-  // Automatically fetch fresh data upon program context adjustments or tab changes
-  useEffect(() => {
-    if (activeTab === 'tracker') {
-      fetchBatches();
-    } else {
-      fetchInventory();
-    }
-  }, [selectedProgramId, activeTab]);
-
-  async function fetchBatches() {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('milk_batches')
-        .select('*'); // If your schema contains an explicit program context hook down the line, add filter here
-
-      if (error) throw error;
-      if (data) setBatches(data);
-    } catch (err) {
-      console.error('Error fetching milk batches:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchInventory() {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('inventory')
-        .select('*');
-
-      if (error) throw error;
-      if (data) setInventoryItems(data);
-    } catch (err) {
-      console.error('Error fetching localized inventory data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <SafeAreaView className="flex-1 bg-[#F9FAFB]" edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Program Selector Header Panel */}
-      <View 
-        className="px-6 pt-6 pb-6 rounded-b-[32px]" 
-        style={{ backgroundColor: currentTheme.headerBg }}
-      >
-        <Text className="text-xs font-semibold uppercase tracking-wider opacity-60" style={{ color: currentTheme.headerText }}>
-          Lifecycle Monitoring
-        </Text>
-        <Text className="text-2xl font-bold mt-1" style={{ color: currentTheme.headerText }}>
-          {currentTheme.name} Tracker
-        </Text>
-
-        {/* Localized Inline Program Switcher Badges */}
-        <View className="flex-row mt-4 space-x-2">
-          {([1, 2, 3] as ProgramId[]).map((pid) => (
-            <TouchableOpacity
-              key={pid}
-              onPress={() => setSelectedProgramId(pid)}
-              className={`px-4 py-1.5 rounded-full ${selectedProgramId === pid ? 'bg-white' : 'bg-white/20'}`}
-            >
-              <Text 
-                className="text-xs font-bold"
-                style={{ color: selectedProgramId === pid ? '#111827' : '#FFFFFF' }}
-              >
-                Prog {pid}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Dynamic Segmented Control Navigation Tab Bar */}
-      <View className="flex-row mx-4 my-4 p-1 bg-gray-100 rounded-xl">
-        {(['tracker', 'inventory'] as TrackerTab[]).map((tab) => (
-          <TouchableOpacity
-            key={tab}
-            onPress={() => setActiveTab(tab)}
-            className={`flex-1 py-2.5 rounded-lg items-center ${activeTab === tab ? 'bg-white shadow-sm' : ''}`}
-          >
-            <Text
-              className={`text-xs font-bold capitalize ${activeTab === tab ? 'text-gray-900' : 'text-gray-400'}`}
-            >
-              {tab === 'tracker' ? 'Processing Pools' : 'Stock Room'}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Scrollable Context Stream */}
-      <ScrollView 
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {loading ? (
-          <View className="py-12 items-center justify-center">
-            <ActivityIndicator size="small" color={currentTheme.accent} />
-            <Text className="text-gray-400 text-xs mt-2">Polling server stores...</Text>
-          </View>
-        ) : activeTab === 'tracker' ? (
-          /* TRACKER BATCH STREAM LISTING */
-          batches.length === 0 ? (
-            <Text className="text-center text-gray-400 text-sm py-12">No batches currently tracked inside processing pipelines.</Text>
-          ) : (
-            batches.map((batch) => {
-              // Gracefully handle progress bar step markers based on the batch status string property
-              const currentStatusIndex = BATCH_STEPS.findIndex(
-                (step) => step.toLowerCase() === (batch.status || '').toLowerCase()
-              );
-              const normalizedIndex = currentStatusIndex !== -1 ? currentStatusIndex : 1;
-
-              return (
-                <View key={batch.batch_id} className="bg-white border border-gray-100 rounded-2xl p-4 mb-4 shadow-sm">
-                  <View className="flex-row justify-between items-center mb-2">
-                    <Text className="text-gray-900 font-bold text-sm">Batch #{batch.batch_id.slice(0, 8).toUpperCase()}</Text>
-                    <View 
-                      className="px-2.5 py-1 rounded-full"
-                      style={{ backgroundColor: `${currentTheme.accent}15` }}
-                    >
-                      <Text className="text-xs font-bold uppercase tracking-wide" style={{ color: currentTheme.accent }}>
-                        {batch.status || 'Pending'}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <Text className="text-gray-400 text-xs mb-4">
-                    Logged: {batch.submitted_date ? new Date(batch.submitted_date).toLocaleDateString() : 'N/A'}
-                  </Text>
-
-                  {/* Horizontal Segmented Pipeline Step Visualizer */}
-                  <View className="flex-row justify-between items-center pt-2 relative">
-                    <View className="absolute left-2 right-2 top-4 h-0.5 bg-gray-100 -z-10" />
-                    {BATCH_STEPS.map((step, idx) => {
-                      const isCompleted = idx <= normalizedIndex;
-                      return (
-                        <View key={step} className="items-center flex-1">
-                          <View 
-                            className={`w-4 h-4 rounded-full border-2 items-center justify-center mb-1 bg-white ${
-                              isCompleted ? 'border-emerald-500' : 'border-gray-200'
-                            }`}
-                          >
-                            {isCompleted && <View className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
-                          </View>
-                          <Text className={`text-[9px] font-semibold tracking-tight ${isCompleted ? 'text-gray-800' : 'text-gray-300'}`}>
-                            {step}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-
-                  {/* Extra Volume Metrics */}
-                  <View className="mt-4 pt-3 border-t border-gray-50 flex-row justify-between text-xs">
-                    <Text className="text-gray-400 text-xs">Pre-Past Volume: <Text className="text-gray-700 font-medium">{batch.pre_pasteurization_ml || 0} mL</Text></Text>
-                    <Text className="text-gray-400 text-xs">Post-Past Volume: <Text className="text-gray-700 font-medium">{batch.post_pasteurization_ml || 0} mL</Text></Text>
-                  </View>
-                </View>
-              );
-            })
-          )
-        ) : (
-          /* INVENTORY STOCK STREAM LISTING */
-          inventoryItems.length === 0 ? (
-            <Text className="text-center text-gray-400 text-sm py-12">No current item entries located inside store infrastructure.</Text>
-          ) : (
-            inventoryItems.map((item) => (
-              <View key={item.inventory_id} className="bg-white border border-gray-100 rounded-2xl p-4 mb-3 shadow-sm flex-row justify-between items-center">
-                <View>
-                  <Text className="text-gray-800 font-bold text-sm">Storage Slot ID</Text>
-                  <Text className="text-gray-400 text-xs mt-0.5">{item.inventory_id.slice(0, 12)}</Text>
-                  <Text className="text-gray-300 text-[10px] mt-2">
-                    Updated: {item.last_updated ? new Date(item.last_updated).toLocaleDateString() : 'N/A'}
-                  </Text>
-                </View>
-                <View className="items-end">
-                  <Text className="text-xl font-black text-gray-900">{item.volume_available_ml || 0}</Text>
-                  <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-wider mt-0.5">Available mL</Text>
-                </View>
-              </View>
-            ))
-          )
-        )}
-      </ScrollView>
-    </SafeAreaView>
-  );
+interface Props {
+    programId: ProgramId;
 }
+
+type StatusFilter = 'all' | 'pending' | 'ready_for_dispensing' | 'discarded';
+
+interface BatchRow {
+    batch_id: string;
+    status: string;
+    pre_pasteurization_ml: number | null;
+    post_pasteurization_ml: number | null;
+    submitted_date: string | null;
+    result_date: string | null;
+    lab_result: string | null;
+    collection_logs: {
+        collection_date: string;
+        volume_ml: number;
+        donors: { first_name: string; last_name: string } | null;
+    } | null;
+    inventory: { volume_available_ml: number }[] | null;
+}
+
+const STATUS_LABELS: Record<string, string> = {
+    pending:              'Pending',
+    ready_for_dispensing: 'Ready',
+    discarded:            'Discarded',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+    pending:              '#F5A623',
+    ready_for_dispensing: '#4CD964',
+    discarded:            '#FF3B30',
+};
+
+const TrackerScreen: React.FC<Props> = ({ programId }) => {
+    const theme = PROGRAM_THEMES[programId];
+    const [batches, setBatches] = useState<BatchRow[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [filter, setFilter] = useState<StatusFilter>('all');
+
+    const fetchBatches = useCallback(async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('milk_batches')
+            .select(`
+                batch_id, status,
+                pre_pasteurization_ml, post_pasteurization_ml,
+                submitted_date, result_date, lab_result,
+                collection_logs!inner (
+                    collection_date, volume_ml,
+                    donors ( first_name, last_name )
+                ),
+                inventory ( volume_available_ml )
+            `)
+            .eq('collection_logs.program_id', programId)
+            .order('updated_at', { ascending: false });
+
+        if (!error && data) setBatches(data as unknown as BatchRow[]);
+        setLoading(false);
+    }, [programId]);
+
+    useEffect(() => { fetchBatches(); }, [fetchBatches]);
+
+    const visible = filter === 'all' ? batches : batches.filter(b => b.status === filter);
+
+    return (
+        <View style={styles.container}>
+            {/* Filter chips */}
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterRow}
+            >
+                {(['all', 'pending', 'ready_for_dispensing', 'discarded'] as StatusFilter[]).map(s => (
+                    <TouchableOpacity
+                        key={s}
+                        style={[
+                            styles.filterChip,
+                            filter === s && { backgroundColor: theme.primary, borderColor: '#000000' },
+                        ]}
+                        onPress={() => setFilter(s)}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={[styles.filterChipText, filter === s && { color: '#000000', fontWeight: '700' }]}>
+                            {s === 'all' ? 'All' : STATUS_LABELS[s]}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+            {loading ? (
+                <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 40 }} />
+            ) : (
+                <ScrollView contentContainerStyle={styles.list}>
+                    {visible.length === 0 ? (
+                        <Text style={styles.emptyText}>No batches found for {theme.name}.</Text>
+                    ) : (
+                        visible.map(batch => {
+                            const donor = batch.collection_logs?.donors;
+                            const inventoryVol = batch.inventory?.[0]?.volume_available_ml ?? null;
+                            const statusColor = STATUS_COLORS[batch.status] ?? '#AAAAAA';
+                            return (
+                                <View
+                                    key={batch.batch_id}
+                                    style={[styles.card, { borderWidth: 1, borderColor: '#E3E3E3' }]}
+                                >
+                                    <View style={styles.cardHeader}>
+                                        <Text style={styles.batchId} numberOfLines={1}>
+                                            Batch {batch.batch_id.slice(0, 8).toUpperCase()}
+                                        </Text>
+                                        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+                                            <Text style={styles.statusBadgeText}>
+                                                {STATUS_LABELS[batch.status] ?? batch.status}
+                                            </Text>
+                                        </View>
+                                    </View>
+
+                                    {donor ? (
+                                        <Text style={styles.cardSub}>
+                                            Donor: {donor.first_name} {donor.last_name}
+                                        </Text>
+                                    ) : null}
+                                    {batch.collection_logs?.collection_date ? (
+                                        <Text style={styles.cardSub}>
+                                            Collected:{' '}
+                                            {new Date(batch.collection_logs.collection_date).toLocaleDateString('en-US', {
+                                                month: 'short', day: 'numeric', year: 'numeric',
+                                            })}
+                                        </Text>
+                                    ) : null}
+
+                                    <View style={styles.volumeRow}>
+                                        {[
+                                            { label: 'Pre-Pasteur.',  value: batch.pre_pasteurization_ml },
+                                            { label: 'Post-Pasteur.', value: batch.post_pasteurization_ml },
+                                            { label: 'Available',     value: inventoryVol },
+                                        ].map(({ label, value }) => (
+                                            <View key={label} style={[styles.volumeItem, { borderTopColor: theme.primary }]}>
+                                                <Text style={styles.volumeLabel}>{label}</Text>
+                                                <Text style={styles.volumeValue}>
+                                                    {value != null ? `${value} ml` : '—'}
+                                                </Text>
+                                            </View>
+                                        ))}
+                                    </View>
+
+                                    {batch.lab_result ? (
+                                        <Text style={styles.labResult}>Lab: {batch.lab_result}</Text>
+                                    ) : null}
+                                </View>
+                            );
+                        })
+                    )}
+                </ScrollView>
+            )}
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container:          { flex: 1, backgroundColor: '#FFFFFF' },
+    filterRow:          { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
+    filterChip: {
+        paddingHorizontal: 16, paddingVertical: 8,
+        borderRadius: 20, backgroundColor: '#FFFFFF',
+        borderWidth: 1, borderColor: '#E3E3E3',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05, shadowRadius: 2, elevation: 1,
+    },
+    filterChipText:     { fontSize: 13, fontWeight: '600', color: '#555555' },
+    list:               { paddingHorizontal: 16, paddingBottom: 40 },
+    emptyText:          { textAlign: 'center', marginTop: 40, color: '#AAAAAA', fontSize: 15 },
+    card: {
+        backgroundColor: '#FFFFFF', borderRadius: 12,
+        padding: 16, marginBottom: 12,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.07, shadowRadius: 3, elevation: 2,
+    },
+    cardHeader:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    batchId:            { fontSize: 15, fontWeight: '700', color: '#000000', flex: 1 },
+    statusBadge:        { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 3, marginLeft: 8 },
+    statusBadgeText:    { fontSize: 11, fontWeight: '700', color: '#FFFFFF' },
+    cardSub:            { fontSize: 13, color: '#555555', marginBottom: 2 },
+    volumeRow:          { flexDirection: 'row', gap: 8, marginTop: 12 },
+    volumeItem: {
+        flex: 1, backgroundColor: '#F8F8F8',
+        borderRadius: 10, padding: 10, alignItems: 'center',
+        borderTopWidth: 3,
+    },
+    volumeLabel:        { fontSize: 10, color: '#AAAAAA', fontWeight: '600', marginBottom: 4 },
+    volumeValue:        { fontSize: 14, fontWeight: '700', color: '#000000' },
+    labResult:          { fontSize: 12, color: '#777777', marginTop: 10, fontStyle: 'italic' },
+});
+
+export default TrackerScreen;

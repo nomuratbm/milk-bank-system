@@ -1,188 +1,188 @@
-/**
- * (staff)/reports.tsx
- * --------------------
- * The Reports screen — a scrollable list of transaction records
- * for the active program.
- */
-
-import React, { useState, useMemo, useEffect } from 'react';
+// src/app/(staff)/reports.tsx
+import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  StatusBar,
-  ListRenderItemInfo,
+    View, Text, ScrollView, StyleSheet, ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { PROGRAM_THEMES } from '../../constants/programTheme';
-import type { Database, ProgramId } from '../../types/database.types';
+import type { ProgramId } from '../../types/database.types';
 
-// Map directly to the valid 'transactions' table from your schema definitions
-type TransactionRowData = Database['public']['Tables']['transactions']['Row'];
+interface Props {
+    programId: ProgramId;
+}
 
-export default function ReportsScreen() {
-  // Local state tracking the active program context for staff viewing
-  const [selectedProgramId, setSelectedProgramId] = useState<ProgramId>(1);
-  const currentTheme = PROGRAM_THEMES[selectedProgramId];
+interface TransactionRow {
+    transaction_id: string;
+    volume_dispensed_ml: number;
+    deposit_amount: number | null;
+    status: string;
+    transaction_date: string;
+    beneficiaries: { first_name: string; last_name: string } | null;
+    inventory: {
+        milk_batches: {
+            collection_logs: { program_id: number } | null;
+        } | null;
+    } | null;
+}
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [transactions, setTransactions] = useState<TransactionRowData[]>([]);
-  const [loading, setLoading] = useState(true);
+interface Summary {
+    totalDispensed: number;
+    totalTransactions: number;
+    completedTransactions: number;
+    totalDeposit: number;
+}
 
-  useEffect(() => {
-    fetchReports();
-  }, [selectedProgramId]);
+const ReportsScreen: React.FC<Props> = ({ programId }) => {
+    const theme = PROGRAM_THEMES[programId];
+    const [transactions, setTransactions] = useState<TransactionRow[]>([]);
+    const [summary, setSummary] = useState<Summary>({
+        totalDispensed: 0,
+        totalTransactions: 0,
+        completedTransactions: 0,
+        totalDeposit: 0,
+    });
+    const [loading, setLoading] = useState(false);
 
-  async function fetchReports() {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('program_id' as any, selectedProgramId);
+    const fetchTransactions = useCallback(async () => {
+        setLoading(true);
+        const { data, error } = await supabase
+            .from('transactions')
+            .select(`
+                transaction_id, volume_dispensed_ml, deposit_amount,
+                status, transaction_date,
+                beneficiaries ( first_name, last_name ),
+                inventory (
+                    milk_batches (
+                        collection_logs ( program_id )
+                    )
+                )
+            `)
+            .order('transaction_date', { ascending: false });
 
-      if (error) throw error;
-      if (data) setTransactions(data);
-    } catch (err) {
-      console.error('Error fetching transaction reports:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
+        if (!error && data) {
+            const filtered = (data as unknown as TransactionRow[]).filter(
+                t => t.inventory?.milk_batches?.collection_logs?.program_id === programId
+            );
+            setTransactions(filtered);
+            setSummary({
+                totalTransactions:      filtered.length,
+                completedTransactions:  filtered.filter(t => t.status === 'completed').length,
+                totalDispensed:         filtered.reduce((acc, t) => acc + (t.volume_dispensed_ml ?? 0), 0),
+                totalDeposit:           filtered.reduce((acc, t) => acc + (t.deposit_amount ?? 0), 0),
+            });
+        }
+        setLoading(false);
+    }, [programId]);
 
-  // Real-time filtered list computation
-  const filteredTransactions = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+    useEffect(() => { fetchTransactions(); }, [fetchTransactions]);
 
-    if (!query) return transactions;
-    return transactions.filter(
-      (t: any) =>
-        t.id?.toLowerCase().includes(query) ||
-        t.transaction_id?.toLowerCase().includes(query) ||
-        t.beneficiary_name?.toLowerCase().includes(query) ||
-        t.status?.toLowerCase().includes(query)
-    );
-  }, [searchQuery, transactions]);
-
-  const renderReport = ({ item }: ListRenderItemInfo<TransactionRowData>) => {
-    // Handle fallback fields gracefully depending on exact column keys in your transactions schema
-    const transactionId = (item as any).transaction_id || (item as any).id || 'N/A';
-    const dateAdded = item.transaction_date ? new Date(item.transaction_date).toLocaleDateString() : 'N/A';
-    const volume = (item as any).volume_ml || (item as any).amount || 0;
-    const notes = (item as any).notes || (item as any).status || 'None';
+    const summaryCards = [
+        { label: 'Total Transactions', value: summary.totalTransactions.toString() },
+        { label: 'Completed',          value: summary.completedTransactions.toString() },
+        { label: 'Total Dispensed',    value: `${summary.totalDispensed} ml` },
+        { label: 'Total Deposit',      value: `₱${summary.totalDeposit.toLocaleString()}` },
+    ];
 
     return (
-      <View
-        className="bg-white border border-gray-100 rounded-xl p-4 mb-3 shadow-sm"
-        style={{ borderLeftWidth: 4, borderLeftColor: currentTheme.accent }}
-      >
-        <Text className="text-xs font-bold mb-3 uppercase tracking-wider" style={{ color: currentTheme.accent }}>
-          Transaction Log Card
-        </Text>
+        <ScrollView contentContainerStyle={styles.container}>
+            {/* Summary cards */}
+            <Text style={styles.sectionHeading}>Summary</Text>
+            <View style={styles.summaryGrid}>
+                {summaryCards.map(({ label, value }) => (
+                    <View key={label} style={[styles.summaryCard, { borderTopColor: theme.primary, borderTopWidth: 4 }]}>
+                        <Text style={styles.summaryValue}>{value}</Text>
+                        <Text style={styles.summaryLabel}>{label}</Text>
+                    </View>
+                ))}
+            </View>
 
-        <ReportRow label="Transaction ID:" value={transactionId} />
-        <ReportRow label="Date Logged:" value={dateAdded} />
-        <ReportRow label="Volume Details:" value={`${volume} mL`} />
-        <ReportRow label="Status/Notes:" value={notes} />
-      </View>
+            <Text style={styles.sectionHeading}>Transaction History</Text>
+
+            {loading ? (
+                <ActivityIndicator size="large" color={theme.accent} style={{ marginTop: 24 }} />
+            ) : transactions.length === 0 ? (
+                <Text style={styles.emptyText}>No transactions found for {theme.name}.</Text>
+            ) : (
+                transactions.map(t => {
+                    const ben = t.beneficiaries;
+                    const isCompleted = t.status === 'completed';
+                    const avatarLetter = (ben?.first_name?.[0] ?? '?').toUpperCase();
+                    return (
+                        <View
+                            key={t.transaction_id}
+                            style={[styles.card, { borderWidth: 1, borderColor: '#E3E3E3' }]}
+                        >
+                            <View style={styles.cardRow}>
+                                <View style={[styles.avatarCircle, { backgroundColor: theme.primary }]}>
+                                    <Text style={styles.avatarLetter}>{avatarLetter}</Text>
+                                </View>
+                                <View style={styles.cardBody}>
+                                    <View style={styles.cardHeaderRow}>
+                                        <Text style={styles.cardName}>
+                                            {ben ? `${ben.first_name} ${ben.last_name}` : 'Unknown'}
+                                        </Text>
+                                        <View style={[
+                                            styles.statusDot,
+                                            { backgroundColor: isCompleted ? '#4CD964' : '#FF3B30' }
+                                        ]} />
+                                    </View>
+                                    <Text style={styles.cardDate}>
+                                        {new Date(t.transaction_date).toLocaleDateString('en-US', {
+                                            month: 'short', day: 'numeric', year: 'numeric',
+                                            hour: 'numeric', minute: '2-digit', hour12: true,
+                                        })}
+                                    </Text>
+                                    <View style={styles.metricsRow}>
+                                        <Text style={styles.cardMetric}>{t.volume_dispensed_ml} ml</Text>
+                                        {t.deposit_amount != null && (
+                                            <Text style={styles.cardMetric}>₱{t.deposit_amount.toLocaleString()}</Text>
+                                        )}
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    );
+                })
+            )}
+        </ScrollView>
     );
-  };
+};
 
-  return (
-    <SafeAreaView className="flex-1 bg-[#F9FAFB]" edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+const styles = StyleSheet.create({
+    container:          { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 40 },
+    sectionHeading:     { fontSize: 22, fontWeight: '700', color: '#000000', marginTop: 20, marginBottom: 12 },
+    emptyText:          { textAlign: 'center', marginTop: 24, color: '#AAAAAA', fontSize: 15 },
 
-      {/* Program Header Selector Block */}
-      <View 
-        className="px-6 pt-6 pb-6 rounded-b-[32px]" 
-        style={{ backgroundColor: currentTheme.headerBg }}
-      >
-        <Text className="text-xs font-semibold uppercase tracking-wider opacity-60" style={{ color: currentTheme.headerText }}>
-          System Audit Log
-        </Text>
-        <Text className="text-2xl font-bold mt-1" style={{ color: currentTheme.headerText }}>
-          {currentTheme.name} Reports
-        </Text>
+    summaryGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 8 },
+    summaryCard: {
+        width: '47%', backgroundColor: '#FFFFFF',
+        borderRadius: 12, padding: 14,
+        borderWidth: 1, borderColor: '#E3E3E3',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.07, shadowRadius: 3, elevation: 2,
+    },
+    summaryValue:       { fontSize: 24, fontWeight: '800', color: '#000000', marginBottom: 4 },
+    summaryLabel:       { fontSize: 12, fontWeight: '600', color: '#888888' },
 
-        {/* Localized Inline Program Switcher Badges */}
-        <View className="flex-row mt-4 space-x-2">
-          {([1, 2, 3] as ProgramId[]).map((pid) => (
-            <TouchableOpacity
-              key={pid}
-              onPress={() => setSelectedProgramId(pid)}
-              className={`px-4 py-1.5 rounded-full ${selectedProgramId === pid ? 'bg-white' : 'bg-white/20'}`}
-            >
-              <Text 
-                className="text-xs font-bold"
-                style={{ color: selectedProgramId === pid ? '#111827' : '#FFFFFF' }}
-              >
-                Prog {pid}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+    card: {
+        backgroundColor: '#FFFFFF', borderRadius: 12,
+        padding: 14, marginBottom: 12,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.07, shadowRadius: 3, elevation: 2,
+    },
+    cardRow:            { flexDirection: 'row', alignItems: 'center' },
+    avatarCircle: {
+        width: 46, height: 46, borderRadius: 23,
+        justifyContent: 'center', alignItems: 'center', marginRight: 14,
+    },
+    avatarLetter:       { fontSize: 20, fontWeight: '700', color: '#000000' },
+    cardBody:           { flex: 1 },
+    cardHeaderRow:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
+    cardName:           { fontSize: 15, fontWeight: '700', color: '#000000', flex: 1 },
+    statusDot:          { width: 10, height: 10, borderRadius: 5, marginLeft: 8 },
+    cardDate:           { fontSize: 12, color: '#AAAAAA', marginBottom: 6 },
+    metricsRow:         { flexDirection: 'row', gap: 16 },
+    cardMetric:         { fontSize: 13, fontWeight: '600', color: '#555555' },
+});
 
-      {/* Real-time Search Box Section */}
-      <View className="px-4 pt-4 pb-2">
-        <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm">
-          <Text className="text-gray-400 text-lg mr-2">⌕</Text>
-          <TextInput
-            className="flex-1 text-gray-800 text-sm p-0"
-            placeholder="Search logs by transaction ID or status..."
-            placeholderTextColor="#9CA3AF"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text className="text-gray-400 font-bold px-1">✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Match Result Counters */}
-      <Text className="text-xs font-semibold text-gray-400 px-5 mb-2 mt-1">
-        {filteredTransactions.length} transaction record{filteredTransactions.length !== 1 ? 's' : ''} {searchQuery ? 'matched' : 'indexed'}
-      </Text>
-
-      {/* Main Stream FlatList Layout */}
-      <FlatList
-        data={filteredTransactions}
-        keyExtractor={(item, index) => (item as any).id || (item as any).transaction_id || index.toString()}
-        renderItem={renderReport}
-        contentContainerClassName="p-4 pb-12"
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View className="py-12 items-center justify-center">
-            <Text className="text-gray-400 text-sm">
-              {loading ? 'Polling transaction records...' : 'No transaction logs found.'}
-            </Text>
-          </View>
-        }
-      />
-    </SafeAreaView>
-  );
-}
-
-/**
- * Reusable layout row to guarantee consistency
- */
-function ReportRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="flex-row justify-between items-center py-1">
-      <Text className="text-xs font-medium text-gray-400" numberOfLines={1}>
-        {label}
-      </Text>
-      <Text className="text-xs font-semibold text-gray-800 text-right flex-1 ml-4" numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
-}
+export default ReportsScreen;

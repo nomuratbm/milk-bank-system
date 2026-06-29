@@ -39,6 +39,16 @@ export default function Index() {
     return <Redirect href="/landing" />;
   }
 
+  // No role loaded yet (still resolving) — show loading instead of falling through
+  if (role === null) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#27978b" />
+        <Text className="mt-3 text-ink-400">Loading...</Text>
+      </View>
+    );
+  }
+
   // Staff — staff home
   if (role === "staff") {
     return <Redirect href="/(staff)/home" />;
@@ -46,9 +56,9 @@ export default function Index() {
 
   // Beneficiary without program — onboarding
   if (role === "beneficiary" && programId === null) {
-    // UPDATED: Kept this cleanly matching your folder mapping structure
     return <Redirect href="/(onboarding)/selectProgram" />;
   }
+
 
   // Beneficiary with program — beneficiary home
   if (role === "beneficiary" && programId !== null) {
