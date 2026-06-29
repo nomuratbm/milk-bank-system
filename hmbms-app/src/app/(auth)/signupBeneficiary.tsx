@@ -7,7 +7,9 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { authService } from "../../services/auth/authService";
+import { supabase } from "../../lib/supabase";
 import TopBrandingSection from "../../components/TopBrandingSection";
+import * as Linking from "expo-linking";
 
 const SignupBeneficiary: React.FC = () => {
   const router = useRouter();
@@ -21,29 +23,44 @@ const SignupBeneficiary: React.FC = () => {
   const isDisabled = !fullName || !email || !password || !isAgreed || loading;
 
   const handleSignup = async () => {
-    if (!fullName || !email || !password) {
-      Alert.alert("Error", "Please fill in all required fields.");
-      return;
-    }
-    setLoading(true);
-    const { error } = await authService.signUp({
-      fullName,
+  if (!fullName || !email || !password) {
+    Alert.alert("Error", "Please fill in all required fields.");
+    return;
+  }
+  setLoading(true);
+
+  const redirectUrl = Linking.createURL("auth-callback");
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
       email,
-      mobileNumber,
       password,
-      accountType: "beneficiary",
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+          mobile_number: mobileNumber,
+          account_type: "beneficiary", 
+        },
+      },
     });
+
     setLoading(false);
+
     if (error) {
       Alert.alert("Sign Up Failed", error.message);
     } else {
       Alert.alert(
         "Account Created",
-        "Please check your email to verify your account.",
+        "Please check your email inbox to verify your account.",
         [{ text: "OK", onPress: () => router.push("/loginBeneficiary") }]
       );
     }
-  };
+  } catch (err: any) {
+    setLoading(false);
+    Alert.alert("Error", err.message || "An unexpected error occurred.");
+  }
+};
 
   return (
     <SafeAreaView className="flex-1 bg-white">

@@ -6,6 +6,9 @@ interface SignupData {
   mobileNumber: string;
   password: string;
   accountType: "beneficiary" | "staff";
+  options?: {
+    emailRedirectTo?: string;
+  };
 }
 
 export const authService = {
@@ -13,17 +16,18 @@ export const authService = {
     return supabase.auth.signInWithPassword({ email, password });
   },
 
-  async signUp(data: SignupData) {
-    return supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
+  async signUp({ fullName, email, mobileNumber, password, accountType, options }: SignupData) {
+    return await supabase.auth.signUp({
+      email,
+      password,
       options: {
+        emailRedirectTo: options?.emailRedirectTo,
         data: {
-          full_name: data.fullName,
-          mobile_number: data.mobileNumber,
-          account_type: data.accountType,
-        },
-      },
+          full_name: fullName,
+          mobile_number: mobileNumber,
+          account_type: accountType,
+        }
+      }
     });
   },
 

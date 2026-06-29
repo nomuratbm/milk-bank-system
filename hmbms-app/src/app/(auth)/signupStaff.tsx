@@ -7,7 +7,9 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { authService } from "../../services/auth/authService";
+import { supabase } from "../../lib/supabase";
 import TopBrandingSection from "../../components/TopBrandingSection";
+import * as Linking from "expo-linking";
 
 const SignupStaff: React.FC = () => {
   const router = useRouter();
@@ -26,22 +28,37 @@ const SignupStaff: React.FC = () => {
       return;
     }
     setLoading(true);
-    const { error } = await authService.signUp({
-      fullName,
-      email,
-      mobileNumber,
-      password,
-      accountType: "staff",
-    });
-    setLoading(false);
-    if (error) {
-      Alert.alert("Sign Up Failed", error.message);
-    } else {
-      Alert.alert(
-        "Account Created",
-        "Please check your email to verify your staff account.",
-        [{ text: "OK", onPress: () => router.push("/loginStaff") }]
-      );
+
+    const redirectUrl = Linking.createURL("auth-callback");
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName,
+            mobile_number: mobileNumber,
+            account_type: "staff", 
+          },
+        },
+      });
+
+      setLoading(false);
+
+      if (error) {
+        Alert.alert("Sign Up Failed", error.message);
+      } else {
+        Alert.alert(
+          "Account Created",
+          "Please check your email inbox to verify your account.",
+          [{ text: "OK", onPress: () => router.push("/loginBeneficiary") }]
+        );
+      }
+    } catch (err: any) {
+      setLoading(false);
+      Alert.alert("Error", err.message || "An unexpected error occurred.");
     }
   };
 

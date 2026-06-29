@@ -6,6 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "hmbmsapp",
+    "extra": {
+      "eas": {
+        "projectId": "421ac575-67b1-466a-bf5f-cd4df43b3831"
+      }
+    },
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.yourname.hmbmsapp",
